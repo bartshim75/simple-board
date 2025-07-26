@@ -8,9 +8,9 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: asia-northeast3 # 서울 리전
+  GAR_LOCATION: us-central1 # 서울 리전
   SERVICE: simpleboard
-  REGION: asia-northeast3
+  REGION: us-central1
 
 jobs:
   deploy:
