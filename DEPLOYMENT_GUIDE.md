@@ -55,19 +55,20 @@ gcloud artifacts repositories create simpleboard \
 #### 3.1 Workload Identity Federation 설정
 ```bash
 # Workload Identity Pool 생성
-gcloud iam workload-identity-pools create "github-pool" \
+gcloud iam workload-identity-pools create "github-pool-new" \
   --project="r3-poob" \
   --location="global" \
   --display-name="GitHub Actions Pool"
 
 # Workload Identity Provider 생성
-gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+gcloud iam workload-identity-pools providers create-oidc github-provider \
   --project="r3-poob" \
   --location="global" \
-  --workload-identity-pool="github-pool" \
-  --display-name="GitHub Actions Provider" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
-  --issuer-uri="https://token.actions.githubusercontent.com"
+  --workload-identity-pool="github-pool-new" \
+  --display-name="GitHub Provider" \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="attribute.repository == 'bartshim75/simple-board'"
 
 # 서비스 계정 생성
 gcloud iam service-accounts create "github-actions-sa" \
@@ -96,7 +97,7 @@ GitHub 저장소 → Settings → Secrets and variables → Actions
 
 필요한 Secrets:
 - `GCP_PROJECT_ID`: `r3-poob`
-- `WIF_PROVIDER`: `projects/260346172085/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
+- `WIF_PROVIDER`: `projects/260346172085/locations/global/workloadIdentityPools/github-pool-new/providers/github-provider`
 - `WIF_SERVICE_ACCOUNT`: `github-actions-sa@r3-poob.iam.gserviceaccount.com`
 - `NEXT_PUBLIC_SUPABASE_URL`: `https://avumgsudxtjtweelnlib.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dW1nc3VkeHRqdHdlZWxubGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MTUzMzIsImV4cCI6MjA2OTA5MTMzMn0._2Hb78Fjievygt1tufKsYtT14PeoOAazKGdXfiIJGWM`
