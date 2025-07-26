@@ -16,7 +16,7 @@
 #### 1.2 로컬 저장소와 GitHub 연결
 ```bash
 # GitHub 저장소 URL로 원격 저장소 추가 (YOUR_USERNAME을 실제 사용자명으로 변경)
-git remote add origin https://github.com/YOUR_USERNAME/simple-board.git
+git remote add origin https://github.com/bartshim75/simple-board.git
 
 # 메인 브랜치로 푸시
 git branch -M main
@@ -44,7 +44,7 @@ gcloud services enable cloudbuild.googleapis.com
 
 #### 2.3 Artifact Registry 저장소 생성
 ```bash
-gcloud artifacts repositories create wall-board \
+gcloud artifacts repositories create simpleboard \
     --repository-format=docker \
     --location=asia-northeast3 \
     --description="Wall Board Docker images"
@@ -56,13 +56,13 @@ gcloud artifacts repositories create wall-board \
 ```bash
 # Workload Identity Pool 생성
 gcloud iam workload-identity-pools create "github-pool" \
-  --project="YOUR_PROJECT_ID" \
+  --project="r3-poob" \
   --location="global" \
   --display-name="GitHub Actions Pool"
 
 # Workload Identity Provider 생성
 gcloud iam workload-identity-pools providers create-oidc "github-provider" \
-  --project="YOUR_PROJECT_ID" \
+  --project="r3-poob" \
   --location="global" \
   --workload-identity-pool="github-pool" \
   --display-name="GitHub Actions Provider" \
@@ -71,35 +71,35 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
 
 # 서비스 계정 생성
 gcloud iam service-accounts create "github-actions-sa" \
-  --project="YOUR_PROJECT_ID" \
+  --project="r3-poob" \
   --display-name="GitHub Actions Service Account"
 
 # 서비스 계정에 권한 부여
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding r3-poob \
+  --member="serviceAccount:github-actions-sa@r3-poob.iam.gserviceaccount.com" \
   --role="roles/run.admin"
 
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding r3-poob \
+  --member="serviceAccount:github-actions-sa@r3-poob.iam.gserviceaccount.com" \
   --role="roles/artifactregistry.admin"
 
 # Workload Identity 바인딩
 gcloud iam service-accounts add-iam-policy-binding \
-  --project="YOUR_PROJECT_ID" \
+  --project="r3-poob" \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/attribute.repository/YOUR_USERNAME/simple-board" \
-  github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+  --member="principalSet://iam.googleapis.com/projects/260346172085/locations/global/workloadIdentityPools/github-pool/attribute.repository/bartshim75/simple-board" \
+  github-actions-sa@r3-poob.iam.gserviceaccount.com
 ```
 
 #### 3.2 GitHub Secrets 설정
 GitHub 저장소 → Settings → Secrets and variables → Actions
 
 필요한 Secrets:
-- `GCP_PROJECT_ID`: Google Cloud 프로젝트 ID
-- `WIF_PROVIDER`: `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
-- `WIF_SERVICE_ACCOUNT`: `github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com`
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase 프로젝트 URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anonymous Key
+- `GCP_PROJECT_ID`: `r3-poob`
+- `WIF_PROVIDER`: `projects/260346172085/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
+- `WIF_SERVICE_ACCOUNT`: `github-actions-sa@r3-poob.iam.gserviceaccount.com`
+- `NEXT_PUBLIC_SUPABASE_URL`: `https://avumgsudxtjtweelnlib.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dW1nc3VkeHRqdHdlZWxubGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MTUzMzIsImV4cCI6MjA2OTA5MTMzMn0._2Hb78Fjievygt1tufKsYtT14PeoOAazKGdXfiIJGWM`
 
 ### 4단계: Supabase 환경 변수 설정
 
@@ -142,11 +142,11 @@ git push origin main
 gcloud builds submit --config cloudbuild.yaml
 
 # 또는 직접 배포
-docker build -t gcr.io/YOUR_PROJECT_ID/wall-board .
-docker push gcr.io/YOUR_PROJECT_ID/wall-board
+docker build -t gcr.io/r3-poob/simpleboard .
+docker push gcr.io/r3-poob/simpleboard
 
-gcloud run deploy wall-board \
-  --image gcr.io/YOUR_PROJECT_ID/wall-board \
+gcloud run deploy simpleboard \
+  --image gcr.io/r3-poob/simpleboard \
   --platform managed \
   --region asia-northeast3 \
   --allow-unauthenticated
@@ -158,7 +158,7 @@ gcloud run deploy wall-board \
 ```bash
 # 도메인 매핑 생성
 gcloud run domain-mappings create \
-  --service wall-board \
+  --service simpleboard \
   --domain your-domain.com \
   --region asia-northeast3
 ```
@@ -174,11 +174,11 @@ Cloud Run이 Let's Encrypt 인증서를 자동으로 관리합니다.
 gcloud run services list --region asia-northeast3
 
 # 로그 확인
-gcloud run services logs read wall-board --region asia-northeast3
+gcloud run services logs read simpleboard --region asia-northeast3
 ```
 
 #### 7.2 성능 모니터링
-- Google Cloud Console → Cloud Run → wall-board
+- Google Cloud Console → Cloud Run → simpleboard
 - Metrics 탭에서 요청량, 응답 시간, 오류율 확인
 
 ### 🔧 트러블슈팅
@@ -186,20 +186,20 @@ gcloud run services logs read wall-board --region asia-northeast3
 #### 빌드 실패
 ```bash
 # 로컬에서 Docker 빌드 테스트
-docker build -t wall-board-test .
-docker run -p 3000:3000 wall-board-test
+docker build -t simpleboard-test .
+docker run -p 3000:3000 simpleboard-test
 ```
 
 #### 환경 변수 문제
 ```bash
 # Cloud Run 서비스 환경 변수 확인
-gcloud run services describe wall-board --region asia-northeast3
+gcloud run services describe simpleboard --region asia-northeast3
 ```
 
 #### 권한 문제
 ```bash
 # 서비스 계정 권한 확인
-gcloud projects get-iam-policy YOUR_PROJECT_ID
+gcloud projects get-iam-policy r3-poob
 ```
 
 ### 📊 비용 최적화
