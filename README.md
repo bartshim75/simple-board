@@ -242,6 +242,33 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 2. 자동으로 클립보드에 링크 복사
 3. 링크를 다른 사람들과 공유
 
+## 🚀 배포
+
+### Google Cloud Run으로 프로덕션 배포
+
+이 프로젝트는 Google Cloud Run에 자동 배포되도록 설정되어 있습니다.
+
+#### 📖 상세 배포 가이드
+전체 배포 과정은 [`DEPLOYMENT_GUIDE.md`](./DEPLOYMENT_GUIDE.md)를 참조하세요.
+
+#### ⚡ 빠른 배포
+1. GitHub 저장소 생성 및 소스 푸시
+2. Google Cloud 프로젝트 설정
+3. GitHub Secrets 설정
+4. `main` 브랜치에 푸시하면 자동 배포
+
+#### 🔧 배포 구성
+- **Docker**: 멀티 스테이지 빌드로 최적화
+- **GitHub Actions**: 자동 CI/CD 파이프라인
+- **Cloud Run**: 서버리스 컨테이너 플랫폼
+- **Artifact Registry**: Docker 이미지 저장소
+
+#### 🌐 배포된 환경 특징
+- HTTPS 자동 적용
+- 자동 스케일링 (0→N)
+- Cold Start 최적화
+- 실시간 로그 및 모니터링
+
 ## 🤝 기여하기
 
 1. Fork the Project
