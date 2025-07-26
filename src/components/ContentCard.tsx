@@ -190,12 +190,8 @@ export default function ContentCard({ item, isOwner, onDelete, onClick }: Conten
                         {item.file_name || item.title || '파일'}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                        {item.file_type && <span>{item.file_type}</span>}
                         {item.file_size && (
-                          <>
-                            {item.file_type && <span>•</span>}
-                            <span>{(item.file_size / 1024 / 1024).toFixed(2)} MB</span>
-                          </>
+                          <span>{(item.file_size / 1024 / 1024).toFixed(2)} MB</span>
                         )}
                       </div>
                     </div>

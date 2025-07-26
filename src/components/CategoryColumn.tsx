@@ -103,7 +103,7 @@ export default function CategoryColumn({
       </div>
 
       {/* 콘텐츠 목록 */}
-      <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+      <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto overflow-x-hidden">
         {sortedItems.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <div className="text-4xl mb-2">📝</div>

@@ -332,12 +332,8 @@ export default function ContentViewer({
                               {content.file_name || content.title || '파일'}
                             </h3>
                             <div className="flex items-center gap-2 text-sm text-orange-700">
-                              {content.file_type && <span>{content.file_type}</span>}
                               {content.file_size && (
-                                <>
-                                  {content.file_type && <span>•</span>}
-                                  <span>{(content.file_size / 1024 / 1024).toFixed(2)} MB</span>
-                                </>
+                                <span>{(content.file_size / 1024 / 1024).toFixed(2)} MB</span>
                               )}
                             </div>
                           </div>

@@ -454,7 +454,7 @@ export default function BoardPage() {
           </div>
         ) : (
           /* 카테고리 컬럼 레이아웃 */
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-hidden">
             <div className="flex gap-6 pb-4" style={{ minWidth: 'max-content' }}>
               {categories.map((category) => (
                 <CategoryColumn
