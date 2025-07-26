@@ -10,14 +10,12 @@ const nextConfig = {
 
   // 환경 변수 설정
   env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
 
-  // 실험적 기능
-  experimental: {
-    // 서버 컴포넌트 최적화
-    serverComponentsExternalPackages: []
-  }
+  // 서버 컴포넌트 외부 패키지 (deprecated experimental에서 이동)
+  serverExternalPackages: []
 }
 
 module.exports = nextConfig 

@@ -22,8 +22,7 @@ export default function BoardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [board, setBoard] = useState<Board | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<string>('');
+
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
@@ -108,28 +107,7 @@ export default function BoardPage() {
     }
   }, [boardId]);
 
-  // 컨텐츠 추가
-  const handleAddContent = async (item: Omit<ContentItem, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const newItem = {
-        ...item,
-        board_id: boardId,
-        user_identifier: userIdentifier,
-      };
 
-
-
-      const { error } = await supabase
-        .from('content_items')
-        .insert([newItem]);
-
-      if (error) throw error;
-      toast.success('콘텐츠가 추가되었습니다.');
-    } catch (error) {
-      console.error('Error adding content:', error);
-      toast.error('콘텐츠 추가에 실패했습니다.');
-    }
-  };
 
   // 컨텐츠 삭제
   const handleDeleteContent = async (itemId: string, itemUserIdentifier: string) => {
@@ -282,11 +260,7 @@ export default function BoardPage() {
     }
   };
 
-  // 카테고리별 콘텐츠 추가
-  const handleAddContentToCategory = (categoryId: string) => {
-    setSelectedCategoryForModal(categoryId);
-    setIsAddModalOpen(true);
-  };
+
 
   // 콘텐츠 클릭 (상세 보기)
   const handleContentClick = (item: ContentItem) => {
@@ -316,11 +290,7 @@ export default function BoardPage() {
     }
   };
 
-  // 카테고리 편집
-  const handleEditCategory = (category: Category) => {
-    setEditingCategory(category);
-    setIsCategoryManagerOpen(true);
-  };
+
 
   // 실시간 구독 설정
   useEffect(() => {
@@ -433,7 +403,6 @@ export default function BoardPage() {
                   category={category}
                   contentItems={contentItems}
                   userIdentifier={userIdentifier}
-                  onAddContent={handleAddContentToCategory}
                   onEditCategory={openCategoryEditModal}
                   onDeleteCategory={handleDeleteCategory}
                   onDeleteContent={handleDeleteContent}

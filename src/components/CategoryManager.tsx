@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Edit3, Trash2, X, Save, Folder, FolderPlus } from 'lucide-react';
+import { Plus, Edit3, Trash2, Folder } from 'lucide-react';
 import { Category } from '@/types';
 import CategoryEditModal from './CategoryEditModal';
-import toast from 'react-hot-toast';
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -12,19 +11,6 @@ interface CategoryManagerProps {
   onUpdateCategory: (categoryId: string, updates: Partial<Category>) => void;
   onDeleteCategory: (categoryId: string) => void;
 }
-
-const DEFAULT_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#06b6d4', // cyan
-  '#f97316', // orange
-  '#84cc16', // lime
-  '#ec4899', // pink
-  '#6b7280', // gray
-];
 
 export default function CategoryManager({
   categories,

@@ -18,6 +18,14 @@ RUN npm ci --only=production
 FROM base AS builder
 WORKDIR /app
 
+# Build-time 환경 변수를 ARG로 받기
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# 환경 변수 설정 (빌드 시 필요)
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 # 패키지 파일 복사
 COPY package.json package-lock.json* ./
 
@@ -34,9 +42,15 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
+# Build-time 환경 변수를 ARG로 받기
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 # 프로덕션 환경 설정
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 # 시스템 사용자 생성
 RUN addgroup --system --gid 1001 nodejs
@@ -56,8 +70,8 @@ USER nextjs
 EXPOSE 3000
 
 # 환경 변수 설정
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # 애플리케이션 실행
 CMD ["node", "server.js"] 
