@@ -46,7 +46,7 @@ gcloud services enable cloudbuild.googleapis.com
 ```bash
 gcloud artifacts repositories create simpleboard \
     --repository-format=docker \
-    --location=asia-northeast3 \
+    --location=us-central1 \
     --description="Wall Board Docker images"
 ```
 
@@ -149,7 +149,7 @@ docker push gcr.io/r3-poob/simpleboard
 gcloud run deploy simpleboard \
   --image gcr.io/r3-poob/simpleboard \
   --platform managed \
-  --region asia-northeast3 \
+  --region us-central1 \
   --allow-unauthenticated
 ```
 
@@ -161,7 +161,7 @@ gcloud run deploy simpleboard \
 gcloud run domain-mappings create \
   --service simpleboard \
   --domain your-domain.com \
-  --region asia-northeast3
+  --region us-central1
 ```
 
 #### 6.2 HTTPS 인증서 자동 관리
@@ -172,10 +172,10 @@ Cloud Run이 Let's Encrypt 인증서를 자동으로 관리합니다.
 #### 7.1 Cloud Run 서비스 확인
 ```bash
 # 서비스 상태 확인
-gcloud run services list --region asia-northeast3
+gcloud run services list --region us-central1
 
 # 로그 확인
-gcloud run services logs read simpleboard --region asia-northeast3
+gcloud run services logs read simpleboard --region us-central1
 ```
 
 #### 7.2 성능 모니터링
@@ -194,7 +194,7 @@ docker run -p 3000:3000 simpleboard-test
 #### 환경 변수 문제
 ```bash
 # Cloud Run 서비스 환경 변수 확인
-gcloud run services describe simpleboard --region asia-northeast3
+gcloud run services describe simpleboard --region us-central1
 ```
 
 #### 권한 문제
