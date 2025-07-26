@@ -11,6 +11,7 @@ import CategoryManager from '@/components/CategoryManager';
 import CategoryEditModal from '@/components/CategoryEditModal';
 import CategoryColumn from '@/components/CategoryColumn';
 import ContentViewer from '@/components/ContentViewer';
+import AddContentModal from '@/components/AddContentModal';
 import toast from 'react-hot-toast';
 
 export default function BoardPage() {
@@ -28,6 +29,8 @@ export default function BoardPage() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<string>('');
   const [userIdentifier] = useState(() => getUserIdentifier());
 
   // 보드 정보 로드
@@ -260,7 +263,34 @@ export default function BoardPage() {
     }
   };
 
+  // 콘텐츠 추가
+  const handleAddContent = async (item: Omit<ContentItem, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newItem = {
+        ...item,
+        board_id: boardId,
+        user_identifier: userIdentifier,
+      };
 
+      const { error } = await supabase
+        .from('content_items')
+        .insert([newItem]);
+
+      if (error) throw error;
+      toast.success('콘텐츠가 추가되었습니다.');
+      setIsAddModalOpen(false);
+      setSelectedCategoryForModal('');
+    } catch (error) {
+      console.error('Error adding content:', error);
+      toast.error('콘텐츠 추가에 실패했습니다.');
+    }
+  };
+
+  // 카테고리별 콘텐츠 추가 모달 열기
+  const handleAddContentToCategory = (categoryId: string) => {
+    setSelectedCategoryForModal(categoryId);
+    setIsAddModalOpen(true);
+  };
 
   // 콘텐츠 클릭 (상세 보기)
   const handleContentClick = (item: ContentItem) => {
@@ -403,6 +433,7 @@ export default function BoardPage() {
                   category={category}
                   contentItems={contentItems}
                   userIdentifier={userIdentifier}
+                  onAddContent={handleAddContentToCategory}
                   onEditCategory={openCategoryEditModal}
                   onDeleteCategory={handleDeleteCategory}
                   onDeleteContent={handleDeleteContent}
@@ -466,6 +497,17 @@ export default function BoardPage() {
         board={board}
         onClose={() => setIsDeleteModalOpen(false)}
         onDelete={handleDeleteBoard}
+      />
+
+      {/* 콘텐츠 추가 모달 */}
+      <AddContentModal
+        isOpen={isAddModalOpen}
+        selectedCategoryId={selectedCategoryForModal}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedCategoryForModal('');
+        }}
+        onAdd={handleAddContent}
       />
     </div>
   );

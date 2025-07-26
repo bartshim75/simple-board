@@ -9,6 +9,7 @@ interface CategoryColumnProps {
   category: Category;
   contentItems: ContentItem[];
   userIdentifier: string;
+  onAddContent: (categoryId: string) => void;
   onEditCategory: (category: Category) => void;
   onDeleteCategory: (categoryId: string) => void;
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
@@ -20,6 +21,7 @@ export default function CategoryColumn({
   category,
   contentItems,
   userIdentifier,
+  onAddContent,
   onEditCategory,
   onDeleteCategory,
   onDeleteContent,
@@ -92,10 +94,7 @@ export default function CategoryColumn({
       {/* 콘텐츠 추가 버튼 */}
       <div className="p-4 border-b border-gray-200">
         <button
-          onClick={() => {
-            // TODO: 콘텐츠 추가 기능 구현 필요
-            console.log('콘텐츠 추가 기능이 곧 구현될 예정입니다.');
-          }}
+          onClick={() => onAddContent(category.id)}
           className="w-full flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
