@@ -127,6 +127,10 @@ export default function BoardPage() {
         .eq('user_identifier', userIdentifier);
 
       if (error) throw error;
+
+      // 즉시 로컬 상태에서 제거
+      setContentItems(prev => prev.filter(item => item.id !== itemId));
+      
       toast.success('콘텐츠가 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting content:', error);
@@ -137,13 +141,24 @@ export default function BoardPage() {
   // 컨텐츠 수정
   const handleUpdateContent = async (itemId: string, updates: Partial<ContentItem>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('content_items')
         .update(updates)
         .eq('id', itemId)
-        .eq('user_identifier', userIdentifier);
+        .eq('user_identifier', userIdentifier)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // 즉시 로컬 상태 업데이트
+      if (data) {
+        setContentItems(prev => 
+          prev.map(item => 
+            item.id === itemId ? data : item
+          )
+        );
+      }
     } catch (error) {
       console.error('Error updating content:', error);
       toast.error('콘텐츠 수정에 실패했습니다.');
@@ -272,11 +287,20 @@ export default function BoardPage() {
         user_identifier: userIdentifier,
       };
 
-      const { error } = await supabase
+      // 데이터베이스에 삽입하고 새로 생성된 데이터를 반환받기
+      const { data, error } = await supabase
         .from('content_items')
-        .insert([newItem]);
+        .insert([newItem])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
+      if (data) {
+        setContentItems(prev => [data, ...prev]);
+      }
+
       toast.success('콘텐츠가 추가되었습니다.');
       setIsAddModalOpen(false);
       setSelectedCategoryForModal('');
@@ -340,7 +364,12 @@ export default function BoardPage() {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setContentItems(prev => [payload.new as ContentItem, ...prev]);
+            // 중복 방지: 이미 로컬에 존재하는지 확인
+            setContentItems(prev => {
+              const exists = prev.some(item => item.id === payload.new.id);
+              if (exists) return prev; // 이미 존재하면 추가하지 않음
+              return [payload.new as ContentItem, ...prev];
+            });
           } else if (payload.eventType === 'DELETE') {
             setContentItems(prev => prev.filter(item => item.id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {

@@ -28,6 +28,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
   const [authorName, setAuthorName] = useState('');
   const [modalCategoryId, setModalCategoryId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFileUploading, setIsFileUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +44,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
     setAuthorName('');
     setModalCategoryId(selectedCategoryId || '');
     setActiveType('text');
+    setIsFileUploading(false);
   };
 
   // 모달이 열릴 때 선택된 카테고리로 초기화
@@ -61,8 +63,6 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
     const file = event.target.files?.[0];
     if (!file) return;
 
-
-
     // 이미지 파일 검증
     if (!file.type.startsWith('image/')) {
       toast.error('이미지 파일만 업로드할 수 있습니다.');
@@ -75,15 +75,23 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
       return;
     }
 
+    setIsFileUploading(true);
+    toast.success('이미지를 변환 중입니다...');
+
     // FileReader를 사용해서 이미지를 Base64로 변환
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-
       setImageUrl(result);
       if (!title) {
         setTitle(file.name);
       }
+      setIsFileUploading(false);
+      toast.success('이미지 업로드가 완료되었습니다.');
+    };
+    reader.onerror = () => {
+      setIsFileUploading(false);
+      toast.error('이미지 변환에 실패했습니다.');
     };
     reader.readAsDataURL(file);
   };
@@ -92,19 +100,19 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
     const file = event.target.files?.[0];
     if (!file) return;
 
-
-
     // 파일 크기 제한 (10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error('파일 크기는 10MB 이하여야 합니다.');
       return;
     }
 
+    setIsFileUploading(true);
+    toast.success('파일을 변환 중입니다...');
+
     // FileReader를 사용해서 파일을 Base64로 변환
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-
       setFileUrl(result);
       setFileName(file.name);
       setFileType(file.type);
@@ -112,6 +120,12 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
       if (!title) {
         setTitle(file.name);
       }
+      setIsFileUploading(false);
+      toast.success('파일 업로드가 완료되었습니다.');
+    };
+    reader.onerror = () => {
+      setIsFileUploading(false);
+      toast.error('파일 변환에 실패했습니다.');
     };
     reader.readAsDataURL(file);
   };
@@ -461,13 +475,13 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isFileUploading}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {isSubmitting && (
+              {(isSubmitting || isFileUploading) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              추가하기
+              {isFileUploading ? '파일 변환 중...' : isSubmitting ? '추가 중...' : '추가하기'}
             </button>
           </div>
         </form>
