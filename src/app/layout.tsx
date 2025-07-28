@@ -29,8 +29,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <footer className="text-center text-gray-500 text-sm border-t border-gray-200 bg-gray-50" style={{ padding: '19px 0' }}>
+          © AX Leading by GrowthCamp. All rights reserved.
+        </footer>
         <Toaster
-          position="top-right"
+          position="top-center"
           toastOptions={{
             duration: 3000,
             style: {

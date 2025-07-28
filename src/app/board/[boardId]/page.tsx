@@ -422,7 +422,7 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50" style={{ minHeight: 'calc(100vh - 60px)' }}>
       <BoardHeader 
         boardId={boardId}
         board={board}
@@ -430,23 +430,23 @@ export default function BoardPage() {
         onDeleteBoard={() => setIsDeleteModalOpen(true)}
       />
       
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-1">
         {/* 카테고리가 없을 때 안내 메시지 */}
         {categories.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-2" style={{ marginTop: '30px' }}>
             <div className="max-w-md mx-auto">
-              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">📂</span>
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📂</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 카테고리를 먼저 생성해주세요
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-4 text-sm">
                 콘텐츠를 추가하기 전에 카테고리를 만들어 체계적으로 관리하세요.
               </p>
               <button
                 onClick={() => setIsCategoryManagerOpen(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition-colors text-base"
               >
                 첫 번째 카테고리 만들기
               </button>
@@ -454,8 +454,8 @@ export default function BoardPage() {
           </div>
         ) : (
           /* 카테고리 컬럼 레이아웃 */
-          <div className="overflow-x-auto overflow-y-hidden">
-            <div className="flex gap-6 pb-4" style={{ minWidth: 'max-content' }}>
+          <div className="overflow-x-auto">
+            <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
               {categories.map((category) => (
                 <CategoryColumn
                   key={category.id}

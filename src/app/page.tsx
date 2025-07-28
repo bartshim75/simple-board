@@ -116,15 +116,15 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto text-center">
           {/* 헤더 */}
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <div className="mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
               Simple
               <span className="text-blue-600">Board</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-2">
+            <p className="text-xl text-gray-600 mb-1">
               누구나 쉽게 사용하는 협업 보드
             </p>
             <p className="text-gray-500">
@@ -133,17 +133,19 @@ export default function HomePage() {
           </div>
 
           {/* 메인 액션 */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* 새 보드 생성 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-blue-600" />
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="mb-4">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Plus className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    새 보드 만들기
+                  </h2>
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  새 보드 만들기
-                </h2>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm">
                   몇 초 만에 새로운 협업 보드를 생성하고 팀과 공유하세요.
                 </p>
               </div>
@@ -151,7 +153,7 @@ export default function HomePage() {
               {!showCreateForm ? (
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   새 보드 시작하기
@@ -218,15 +220,17 @@ export default function HomePage() {
             </div>
 
             {/* 기존 보드 참여 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ExternalLink className="w-8 h-8 text-purple-600" />
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="mb-4">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <ExternalLink className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    기존 보드 참여하기
+                  </h2>
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  기존 보드 참여하기
-                </h2>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm">
                   공유받은 보드 링크나 ID를 입력해서 참여하세요.
                 </p>
               </div>
@@ -264,46 +268,40 @@ export default function HomePage() {
 
           {/* 최근 보드 목록 */}
           {recentBoards.length > 0 && (
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <History className="w-8 h-8 text-green-600" />
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mt-6">
+              <div className="mb-4">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <History className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    최근 보드
+                  </h2>
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  최근 보드
-                </h2>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm">
                   최근에 생성된 보드들을 확인하고 바로 접속하세요.
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentBoards.slice(0, 5).map((board) => (
                   <div
                     key={board.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => router.push(`/board/${board.id}`)}
                   >
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 truncate">
                         {board.title}
                       </h3>
-                      {board.description && (
-                        <p className="text-sm text-gray-500 truncate mt-1">
-                          {board.description}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        ID: {board.id} • {new Date(board.created_at).toLocaleDateString('ko-KR')}
-                      </p>
                     </div>
-                    <ExternalLink className="w-5 h-5 text-gray-400 flex-shrink-0 ml-3" />
+                    <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
                   </div>
                 ))}
               </div>
 
               {recentBoards.length > 5 && (
-                <div className="mt-4 text-center">
+                <div className="mt-3 text-center">
                   <p className="text-sm text-gray-500">
                     총 {recentBoards.length}개의 보드가 있습니다
                   </p>
@@ -313,10 +311,10 @@ export default function HomePage() {
           )}
 
           {/* 특징 소개 */}
-          <div className="mt-16 grid md:grid-cols-3 gap-8">
+          <div className="mt-12 grid md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚡</span>
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-xl">⚡</span>
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">즉시 시작</h3>
               <p className="text-gray-600 text-sm">
@@ -325,8 +323,8 @@ export default function HomePage() {
             </div>
             
             <div className="text-center">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🔄</span>
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-xl">🔄</span>
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">실시간 동기화</h3>
               <p className="text-gray-600 text-sm">
@@ -335,8 +333,8 @@ export default function HomePage() {
             </div>
             
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📱</span>
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-xl">📱</span>
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">어디서나</h3>
               <p className="text-gray-600 text-sm">

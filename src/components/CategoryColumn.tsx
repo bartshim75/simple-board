@@ -48,21 +48,21 @@ export default function CategoryColumn({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg border border-gray-200 min-h-[400px] w-80 flex-shrink-0">
+    <div className="bg-gray-50 rounded-lg border border-gray-200 w-80 flex-shrink-0 flex flex-col" style={{ minHeight: '150px' }}>
       {/* 카테고리 헤더 */}
-      <div className="p-4 border-b border-gray-200 bg-white rounded-t-lg">
+      <div className="p-3 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div
-              className="w-4 h-4 rounded-full flex-shrink-0"
+              className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: category.color }}
             />
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">
+              <h3 className="font-semibold text-gray-900 truncate text-sm">
                 {category.name}
               </h3>
               {category.description && (
-                <p className="text-sm text-gray-500 truncate mt-1">
+                <p className="text-xs text-gray-500 truncate mt-0.5">
                   {category.description}
                 </p>
               )}
@@ -70,44 +70,44 @@ export default function CategoryColumn({
           </div>
           
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
               {sortedItems.length}
             </span>
             <button
               onClick={() => onEditCategory(category)}
-              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
               title="카테고리 편집"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-3 h-3" />
             </button>
             <button
               onClick={handleDeleteCategory}
-              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
               title="카테고리 삭제"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
             </button>
           </div>
         </div>
       </div>
 
       {/* 콘텐츠 추가 버튼 */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-3 border-b border-gray-200 flex-shrink-0">
         <button
           onClick={() => onAddContent(category.id)}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
-          <Plus className="w-4 h-4" />
-          <span className="text-sm font-medium">콘텐츠 추가</span>
+          <Plus className="w-3 h-3" />
+          <span className="text-xs font-medium">콘텐츠 추가</span>
         </button>
       </div>
 
       {/* 콘텐츠 목록 */}
-      <div className="p-4 space-y-4 max-h-[600px] overflow-y-auto overflow-x-hidden">
+      <div className="p-3 space-y-3 overflow-y-auto overflow-x-hidden" style={{ maxHeight: 'calc(100vh - 300px)' }}>
         {sortedItems.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <div className="text-4xl mb-2">📝</div>
-            <p className="text-sm">아직 콘텐츠가 없습니다</p>
+          <div className="text-center py-2 text-gray-400">
+            <div className="text-lg mb-1">📝</div>
+            <p className="text-xs">아직 콘텐츠가 없습니다</p>
           </div>
         ) : (
           sortedItems.map((item) => (
