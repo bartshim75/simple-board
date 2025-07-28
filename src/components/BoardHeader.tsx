@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Share2, Plus, Check, Trash2 } from 'lucide-react';
+import { ArrowLeft, Share2, Plus, Check, Trash2, Edit3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Board } from '@/types';
 import toast from 'react-hot-toast';
@@ -11,9 +11,10 @@ interface BoardHeaderProps {
   board: Board | null;
   onAddCategory: () => void;
   onDeleteBoard: () => void;
+  onEditBoard: () => void;
 }
 
-export default function BoardHeader({ boardId, board, onAddCategory, onDeleteBoard }: BoardHeaderProps) {
+export default function BoardHeader({ boardId, board, onAddCategory, onDeleteBoard, onEditBoard }: BoardHeaderProps) {
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
 
@@ -91,6 +92,15 @@ export default function BoardHeader({ boardId, board, onAddCategory, onDeleteBoa
                   <span className="hidden sm:inline">공유</span>
                 </>
               )}
+            </button>
+
+            <button
+              onClick={onEditBoard}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="보드 정보 수정"
+            >
+              <Edit3 className="w-4 h-4" />
+              <span className="hidden sm:inline">편집</span>
             </button>
 
             <button

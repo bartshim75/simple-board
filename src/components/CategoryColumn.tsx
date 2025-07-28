@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { Edit3, Trash2, Plus } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Category, ContentItem } from '@/types';
 import ContentCard from './ContentCard';
+import GripIcon from './GripIcon';
 
 interface CategoryColumnProps {
   category: Category;
@@ -30,6 +33,23 @@ export default function CategoryColumn({
 }: CategoryColumnProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
+  // 드래그 앤 드롭 설정
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 1000 : 'auto',
+  };
+
   // 카테고리에 속한 콘텐츠들을 최신순으로 정렬
   const sortedItems = contentItems
     .filter(item => item.category_id === category.id)
@@ -48,11 +68,25 @@ export default function CategoryColumn({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg border border-gray-200 w-80 flex-shrink-0 flex flex-col" style={{ minHeight: '150px' }}>
+    <div 
+      ref={setNodeRef}
+      style={{ ...style, minHeight: '150px' }}
+      className="bg-gray-50 rounded-lg border border-gray-200 w-80 flex-shrink-0 flex flex-col"
+    >
       {/* 카테고리 헤더 */}
       <div className="p-3 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* 드래그 핸들 */}
+            <button
+              {...attributes}
+              {...listeners}
+              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing transition-colors"
+              title="드래그하여 위치 변경"
+            >
+              <GripIcon size={12} />
+            </button>
+            
             <div
               className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: category.color }}

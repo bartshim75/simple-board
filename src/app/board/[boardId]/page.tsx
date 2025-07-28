@@ -7,12 +7,28 @@ import { supabase } from '@/lib/supabase';
 import { getUserIdentifier } from '@/lib/utils';
 import BoardHeader from '@/components/BoardHeader';
 import BoardDeleteModal from '@/components/BoardDeleteModal';
+import BoardEditModal from '@/components/BoardEditModal';
 import CategoryManager from '@/components/CategoryManager';
 import CategoryEditModal from '@/components/CategoryEditModal';
 import CategoryColumn from '@/components/CategoryColumn';
 import ContentViewer from '@/components/ContentViewer';
 import AddContentModal from '@/components/AddContentModal';
 import toast from 'react-hot-toast';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 export default function BoardPage() {
   const params = useParams();
@@ -29,9 +45,17 @@ export default function BoardPage() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<string>('');
   const [userIdentifier] = useState(() => getUserIdentifier());
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 드래그 앤 드롭 센서 설정
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
 
   // 보드 정보 로드
   const loadBoard = useCallback(async () => {
@@ -217,6 +241,30 @@ export default function BoardPage() {
     }
   };
 
+  // 보드 편집 저장
+  const handleSaveBoardEdit = async (data: { title: string; description?: string }) => {
+    try {
+      const { error } = await supabase
+        .from('boards')
+        .update({
+          title: data.title,
+          description: data.description,
+        })
+        .eq('id', boardId);
+
+      if (error) throw error;
+
+      // 로컬 상태 업데이트
+      setBoard(prev => prev ? { ...prev, ...data } : null);
+      
+      toast.success('보드 정보가 수정되었습니다.');
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating board:', error);
+      toast.error('보드 정보 수정에 실패했습니다.');
+    }
+  };
+
   // 카테고리 삭제
   const handleDeleteCategory = async (categoryId: string) => {
     try {
@@ -234,6 +282,11 @@ export default function BoardPage() {
         .eq('id', categoryId);
 
       if (error) throw error;
+      
+      // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
+      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+      setContentItems(prev => prev.filter(item => item.category_id !== categoryId));
+      
       toast.success('카테고리가 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -328,6 +381,59 @@ export default function BoardPage() {
     setSelectedContent(null);
   };
 
+  // 드래그 시작 처리
+  const handleDragStart = (event: DragStartEvent) => {
+    setIsDragging(true);
+    console.log('Drag start:', event.active.id);
+  };
+
+  // 카테고리 순서 변경 처리
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setIsDragging(false);
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = categories.findIndex(cat => cat.id === active.id);
+      const newIndex = categories.findIndex(cat => cat.id === over?.id);
+
+      console.log('Drag end:', { active: active.id, over: over?.id, oldIndex, newIndex });
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        // 로컬 상태 업데이트
+        const newCategories = arrayMove(categories, oldIndex, newIndex);
+        
+        // 데이터베이스 업데이트
+        try {
+          // 각 카테고리를 개별적으로 업데이트 (더 안전한 방법)
+          for (let i = 0; i < newCategories.length; i++) {
+            const category = newCategories[i];
+            const { error: updateError } = await supabase
+              .from('categories')
+              .update({ 
+                position: i
+              })
+              .eq('id', category.id)
+              .eq('board_id', boardId); // board_id로 필터링하여 안전성 확보
+
+            if (updateError) {
+              console.error(`Error updating category ${category.id}:`, updateError);
+              throw updateError;
+            }
+          }
+
+          console.log('Successfully updated all categories');
+          // 성공 시에만 로컬 상태 업데이트
+          setCategories(newCategories);
+          toast.success('카테고리 순서가 변경되었습니다.');
+        } catch (error) {
+          console.error('Error updating category positions:', error);
+          toast.error('카테고리 순서 변경에 실패했습니다.');
+          loadCategories();
+        }
+      }
+    }
+  };
+
   // 뷰어에서 콘텐츠 업데이트
   const handleUpdateContentFromViewer = async (updates: Partial<ContentItem>) => {
     if (selectedContent) {
@@ -359,6 +465,21 @@ export default function BoardPage() {
         {
           event: '*',
           schema: 'public',
+          table: 'boards',
+          filter: `id=eq.${boardId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            console.log('Board updated via realtime:', payload.new);
+            setBoard(payload.new as Board);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'content_items',
           filter: `board_id=eq.${boardId}`,
         },
@@ -371,6 +492,7 @@ export default function BoardPage() {
               return [payload.new as ContentItem, ...prev];
             });
           } else if (payload.eventType === 'DELETE') {
+            console.log('Content item deleted via realtime:', payload.old.id);
             setContentItems(prev => prev.filter(item => item.id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {
             setContentItems(prev => 
@@ -390,16 +512,32 @@ export default function BoardPage() {
           filter: `board_id=eq.${boardId}`,
         },
         (payload) => {
+          // 드래그 중일 때는 실시간 업데이트 무시
+          if (isDragging) {
+            console.log('Ignoring realtime update during drag');
+            return;
+          }
+
           if (payload.eventType === 'INSERT') {
             setCategories(prev => [...prev, payload.new as Category].sort((a, b) => a.position - b.position));
           } else if (payload.eventType === 'DELETE') {
+            console.log('Category deleted via realtime:', payload.old.id);
             setCategories(prev => prev.filter(category => category.id !== payload.old.id));
+            // 관련 콘텐츠도 함께 제거
+            setContentItems(prev => prev.filter(item => item.category_id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {
-            setCategories(prev => 
-              prev.map(category => 
-                category.id === payload.new.id ? payload.new as Category : category
-              ).sort((a, b) => a.position - b.position)
-            );
+            // position 업데이트는 드래그 앤 드롭에서 처리하므로 무시
+            const newCategory = payload.new as Category;
+            const oldCategory = payload.old as Category;
+            
+            // position이 변경된 경우가 아니라면 업데이트
+            if (newCategory.position === oldCategory.position) {
+              setCategories(prev => 
+                prev.map(category => 
+                  category.id === newCategory.id ? newCategory : category
+                ).sort((a, b) => a.position - b.position)
+              );
+            }
           }
         }
       )
@@ -428,6 +566,7 @@ export default function BoardPage() {
         board={board}
         onAddCategory={() => setIsCategoryManagerOpen(true)}
         onDeleteBoard={() => setIsDeleteModalOpen(true)}
+        onEditBoard={() => setIsEditModalOpen(true)}
       />
       
       <main className="container mx-auto px-4 py-1">
@@ -454,24 +593,36 @@ export default function BoardPage() {
           </div>
         ) : (
           /* 카테고리 컬럼 레이아웃 */
-          <div className="overflow-x-auto">
-            <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
-              {categories.map((category) => (
-                <CategoryColumn
-                  key={category.id}
-                  category={category}
-                  contentItems={contentItems}
-                  userIdentifier={userIdentifier}
-                  onAddContent={handleAddContentToCategory}
-                  onEditCategory={openCategoryEditModal}
-                  onDeleteCategory={handleDeleteCategory}
-                  onDeleteContent={handleDeleteContent}
-                  onUpdateContent={handleUpdateContent}
-                  onContentClick={handleContentClick}
-                />
-              ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="overflow-x-auto">
+              <SortableContext
+                items={categories.map(cat => cat.id)}
+                strategy={horizontalListSortingStrategy}
+              >
+                <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
+                  {categories.map((category) => (
+                    <CategoryColumn
+                      key={category.id}
+                      category={category}
+                      contentItems={contentItems}
+                      userIdentifier={userIdentifier}
+                      onAddContent={handleAddContentToCategory}
+                      onEditCategory={openCategoryEditModal}
+                      onDeleteCategory={handleDeleteCategory}
+                      onDeleteContent={handleDeleteContent}
+                      onUpdateContent={handleUpdateContent}
+                      onContentClick={handleContentClick}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
             </div>
-          </div>
+          </DndContext>
         )}
       </main>
 
@@ -518,6 +669,14 @@ export default function BoardPage() {
         onClose={handleCloseViewer}
         onUpdate={handleUpdateContentFromViewer}
         onDelete={handleDeleteContentFromViewer}
+      />
+
+      {/* 보드 편집 모달 */}
+      <BoardEditModal
+        isOpen={isEditModalOpen}
+        board={board}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveBoardEdit}
       />
 
       {/* 보드 삭제 모달 */}
