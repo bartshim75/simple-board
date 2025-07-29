@@ -1,102 +1,88 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { likeContentItem, unlikeContentItem, checkIfLiked, testSupabaseConnection, checkTablesExist, cleanupInvalidLikes, refreshContentView } from '@/lib/supabase';
+import { useState, useEffect, useMemo, memo } from 'react';
+import { likeContentItem, unlikeContentItem, checkIfLiked, testSupabaseConnection, checkTablesExist, cleanupInvalidLikes, refreshContentView, supabase } from '@/lib/supabase';
 
 interface LikeButtonProps {
   contentItemId: string;
   userIdentifier: string;
   initialLikeCount: number;
-  onLikeCountChange?: (count: number) => void;
 }
 
-export default function LikeButton({ 
+function LikeButton({ 
   contentItemId, 
   userIdentifier, 
-  initialLikeCount,
-  onLikeCountChange 
+  initialLikeCount
 }: LikeButtonProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLoading, setIsLoading] = useState(false);
 
-  // initialLikeCount와 likeCount 동기화
-  const syncedLikeCount = useMemo(() => {
-    if (likeCount !== initialLikeCount) {
-      return initialLikeCount;
-    }
-    return likeCount;
-  }, [likeCount, initialLikeCount, contentItemId]);
+  // likeCount 사용 (단순화)
+  const displayCount = likeCount;
 
   useEffect(() => {
     const initializeLikeStatus = async () => {
       try {
-        // 먼저 연결 테스트
-        console.log('=== Initializing Like Button ===');
-        console.log('Content ID:', contentItemId);
-        console.log('User ID:', userIdentifier);
-        console.log('Initial Count:', initialLikeCount);
-        
-        const connectionOk = await testSupabaseConnection();
-        if (!connectionOk) {
-          console.log('Supabase connection failed - Like button will not work');
-          return;
-        }
-        
-        // 테이블 존재 여부 확인
-        await checkTablesExist();
-        
         const liked = await checkIfLiked(contentItemId, userIdentifier);
         setIsLiked(liked);
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Initial like status:', liked);
-        }
-        
-        // 상태 미스매치 감지 및 수정
-        if (liked && initialLikeCount === 0) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('⚠️ 상태 미스매치 감지: DB에서는 좋아요됨, UI에서는 0개');
-            console.log('🔢 setLikeCount(1) 호출');
-          }
-          setLikeCount(1);
-          onLikeCountChange?.(1);
-          
-          // 뷰 새로고침으로 데이터 동기화
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🔄 뷰 새로고침으로 데이터 동기화...');
-          }
-          await refreshContentView();
-        } else if (!liked && initialLikeCount > 0) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('⚠️ 상태 미스매치 감지: DB에서는 좋아요안됨, UI에서는 0개 초과');
-            console.log('🔢 setLikeCount(0) 호출');
-          }
-          setLikeCount(0);
-          onLikeCountChange?.(0);
-          
-          // 잘못된 좋아요 데이터 정리
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🧹 잘못된 좋아요 데이터 정리 시작...');
-          }
-          await cleanupInvalidLikes(contentItemId, userIdentifier);
-          
-          // 뷰 새로고침으로 데이터 동기화
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🔄 뷰 새로고침으로 데이터 동기화...');
-          }
-          await refreshContentView();
-        }
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Failed to check initial like status:', String(error));
-        }
+        // 에러 처리 (로그 없이)
       }
     };
 
     if (contentItemId && userIdentifier) {
       initializeLikeStatus();
     }
-  }, [contentItemId, userIdentifier, initialLikeCount]);
+  }, [contentItemId, userIdentifier]);
+
+  // 실시간 좋아요 개수 업데이트 (단순화)
+  useEffect(() => {
+    const refreshLikeCount = async () => {
+      try {
+        const { data: likeData, error: likeError } = await supabase
+          .from('user_likes')
+          .select('id')
+          .eq('content_item_id', contentItemId);
+        
+        const actualLikeCount = likeError ? 0 : (likeData?.length || 0);
+        
+        // 카운트가 실제로 변경된 경우에만 업데이트
+        setLikeCount(prevCount => {
+          if (actualLikeCount !== prevCount) {
+            return actualLikeCount;
+          }
+          return prevCount;
+        });
+      } catch (error) {
+        // 에러 처리 (로그 없이)
+      }
+    };
+
+    // 초기 로드
+    refreshLikeCount();
+
+    // Supabase Realtime 구독
+    const channel = supabase
+      .channel(`likes-${contentItemId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_likes',
+          filter: `content_item_id=eq.${contentItemId}`
+        },
+        refreshLikeCount
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [contentItemId]);
+
+
 
   const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,45 +98,31 @@ export default function LikeButton({
         const result = await likeContentItem(contentItemId, userIdentifier);
         if (result !== null) { // 성공적으로 추가된 경우에만 UI 업데이트
           setIsLiked(true);
+          // 낙관적 업데이트
           const newCount = likeCount + 1;
           setLikeCount(newCount);
-          onLikeCountChange?.(newCount);
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Like added successfully');
-          }
-        } else {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Like already exists, no UI update needed');
-          }
         }
       } else {
         // 좋아요 제거
         await unlikeContentItem(contentItemId, userIdentifier);
         setIsLiked(false);
+        
+        // 낙관적 업데이트
         const newCount = Math.max(0, likeCount - 1);
         setLikeCount(newCount);
-        onLikeCountChange?.(newCount);
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Like removed successfully');
+      }
+          } catch (error) {
+        // 오류 발생 시 UI만 임시로 토글 (실제 DB 연동 실패 시)
+        if (!isLiked) {
+          setIsLiked(true);
+          setLikeCount(prev => prev + 1);
+        } else {
+          setIsLiked(false);
+          setLikeCount(prev => Math.max(0, prev - 1));
         }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        const errorMessage = 'Error toggling like: ' + String(error);
-        console.log(errorMessage);
-        console.log('=== Like Operation Failed ===');
-      }
-      // 오류 발생 시 UI만 임시로 토글 (실제 DB 연동 실패 시)
-      if (!isLiked) {
-        setIsLiked(true);
-        setLikeCount(prev => prev + 1);
-      } else {
-        setIsLiked(false);
-        setLikeCount(prev => Math.max(0, prev - 1));
-      }
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // 항상 버튼을 표시 (디버깅을 위해)
@@ -181,9 +153,11 @@ export default function LikeButton({
           d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
         />
       </svg>
-      <span className={`text-sm font-medium ${syncedLikeCount === 0 ? 'text-gray-400' : ''}`}>
-        {syncedLikeCount}
+      <span className={`text-sm font-medium ${displayCount === 0 ? 'text-gray-400' : ''}`}>
+        {displayCount}
       </span>
     </button>
   );
-} 
+}
+
+export default memo(LikeButton); 

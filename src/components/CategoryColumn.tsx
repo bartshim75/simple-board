@@ -19,7 +19,6 @@ interface CategoryColumnProps {
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
   onUpdateContent: (itemId: string, updates: Partial<ContentItemWithLikes>) => void;
   onContentClick: (item: ContentItemWithLikes) => void;
-  onLikeCountChange?: (itemId: string, newCount: number) => void;
 }
 
 export default function CategoryColumn({
@@ -32,7 +31,6 @@ export default function CategoryColumn({
   onDeleteContent,
   onUpdateContent,
   onContentClick,
-  onLikeCountChange,
 }: CategoryColumnProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; categoryName: string }>({
@@ -163,7 +161,7 @@ export default function CategoryColumn({
                 userIdentifier={userIdentifier}
                 onDelete={() => onDeleteContent(item.id, item.user_identifier)}
                 onClick={() => onContentClick(item)}
-                onLikeCountChange={(newCount) => onLikeCountChange?.(item.id, newCount)}
+
               />
             </div>
           ))

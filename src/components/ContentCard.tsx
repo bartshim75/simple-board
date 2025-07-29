@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { ContentItemWithLikes } from '@/types';
 import { Trash2, ExternalLink, Clock, Type, Image as ImageIcon, Link, File, Download, User } from 'lucide-react';
 import { getRelativeTime } from '@/lib/utils';
@@ -12,28 +12,26 @@ interface ContentCardProps {
   userIdentifier: string;
   onDelete: () => void;
   onClick: () => void;
-  onLikeCountChange?: (newCount: number) => void;
 }
 
-export default function ContentCard({ 
+function ContentCard({ 
   item, 
   isOwner, 
   userIdentifier,
   onDelete, 
-  onClick,
-  onLikeCountChange 
+  onClick
 }: ContentCardProps) {
   const [imageError, setImageError] = useState(false);
 
-  // 개발 모드에서만 로그 출력
-  if (process.env.NODE_ENV === 'development') {
-    console.log('ContentCard rendering:', { 
-      itemId: item.id, 
-      userIdentifier, 
-      likeCount: item.like_count,
-      isOwner 
-    });
-  }
+  // 개발 모드에서만 로그 출력 (렌더링 최적화를 위해 주석 처리)
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log('ContentCard rendering:', { 
+  //     itemId: item.id, 
+  //     userIdentifier, 
+  //     likeCount: item.like_count,
+  //     isOwner 
+  //   });
+  // }
 
   const getTypeIcon = () => {
     switch (item.type) {
@@ -112,7 +110,6 @@ export default function ContentCard({
               contentItemId={item.id}
               userIdentifier={userIdentifier}
               initialLikeCount={item.like_count}
-              onLikeCountChange={onLikeCountChange}
             />
             {isOwner && (
               <button
@@ -236,4 +233,6 @@ export default function ContentCard({
       </div>
     </div>
   );
-} 
+}
+
+export default memo(ContentCard); 

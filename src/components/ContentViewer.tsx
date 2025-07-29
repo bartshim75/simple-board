@@ -12,10 +12,9 @@ interface ContentViewerProps {
   isOpen: boolean;
   content: ContentItemWithLikes | null;
   isOwner: boolean;
-  onClose: () => void;
+  onClose: () => Promise<void>;
   onUpdate: (updatedContent: Partial<ContentItemWithLikes>) => void;
   onDelete: () => void;
-  onLikeCountChange?: (contentItemId: string, newCount: number) => void;
 }
 
 export default function ContentViewer({ 
@@ -24,8 +23,7 @@ export default function ContentViewer({
   isOwner, 
   onClose, 
   onUpdate, 
-  onDelete,
-  onLikeCountChange
+  onDelete
 }: ContentViewerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -174,7 +172,6 @@ export default function ContentViewer({
               contentItemId={content.id}
               userIdentifier={userIdentifier}
               initialLikeCount={content.like_count}
-              onLikeCountChange={(newCount) => onLikeCountChange?.(content.id, newCount)}
             />
             {isOwner && !isEditing && (
               <button
@@ -186,7 +183,7 @@ export default function ContentViewer({
               </button>
             )}
             <button
-              onClick={onClose}
+              onClick={async () => await onClose()}
               className="p-2 text-gray-500 hover:text-gray-700 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />

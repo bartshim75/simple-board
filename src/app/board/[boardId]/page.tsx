@@ -182,21 +182,7 @@ export default function BoardPage() {
     }
   };
 
-  // 좋아요 개수 변경 처리
-  const handleLikeCountChange = (itemId: string, newCount: number) => {
-    setContentItems(prev => 
-      prev.map(item => 
-        item.id === itemId ? { ...item, like_count: newCount } : item
-      )
-    );
-    
-    // Viewer에서 열린 콘텐츠의 좋아요 개수도 업데이트
-    if (selectedContent && selectedContent.id === itemId) {
-      setSelectedContent(prev => 
-        prev ? { ...prev, like_count: newCount } : null
-      );
-    }
-  };
+
 
   // 카테고리 생성
   const handleCreateCategory = async (name: string, description?: string, color?: string) => {
@@ -399,18 +385,9 @@ export default function BoardPage() {
   };
 
   // 뷰어 닫기
-  const handleCloseViewer = () => {
-    // Viewer가 닫힐 때 selectedContent의 최신 상태를 contentItems에 반영
-    if (selectedContent) {
-      setContentItems(prev => 
-        prev.map(item => 
-          item.id === selectedContent.id ? selectedContent : item
-        )
-      );
-    }
-    
-    setIsViewerOpen(false);
-    setSelectedContent(null);
+  const handleCloseViewer = async () => {
+    // Viewer를 닫을 때 전체 화면 새로고침
+    window.location.reload();
   };
 
   // 드래그 시작 처리
@@ -679,7 +656,7 @@ export default function BoardPage() {
                       onDeleteContent={handleDeleteContent}
                       onUpdateContent={handleUpdateContent}
                       onContentClick={handleContentClick}
-                      onLikeCountChange={handleLikeCountChange}
+
                     />
                   ))}
                 </div>
@@ -730,7 +707,7 @@ export default function BoardPage() {
         onClose={handleCloseViewer}
         onUpdate={handleUpdateContentFromViewer}
         onDelete={handleDeleteContentFromViewer}
-        onLikeCountChange={handleLikeCountChange}
+
       />
 
       {/* 보드 편집 모달 */}
