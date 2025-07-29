@@ -2,20 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, ExternalLink, Clipboard, History } from 'lucide-react';
+import { Plus, ExternalLink, Clipboard, History, LogIn, LogOut, User } from 'lucide-react';
 import { generateBoardId, getUserIdentifier } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { Board } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import LoginModal from '@/components/LoginModal';
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
   const router = useRouter();
+  const { isLoggedIn, logout } = useAuth();
   const [boardUrl, setBoardUrl] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [boardTitle, setBoardTitle] = useState('');
   const [boardDescription, setBoardDescription] = useState('');
   const [recentBoards, setRecentBoards] = useState<Board[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [userIdentifier] = useState(() => getUserIdentifier());
 
   // 최근 보드 목록 로드
@@ -116,9 +120,47 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* 헤더 */}
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img src="/gcamp_logo.svg" alt="GrowthCamp Logo" className="w-8 h-8" />
+            </div>
+            <img src="/gcamp_name_logo_gray.svg" alt="GrowthCamp Name Logo" className="h-8" />
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {isLoggedIn ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-800 rounded-lg">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm font-medium">관리자</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm font-medium">로그아웃</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="text-sm font-medium">관리자 로그인</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto text-center">
-          {/* 헤더 */}
+          {/* 메인 헤더 */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
               그로쓰캠프
@@ -344,6 +386,12 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* 로그인 모달 */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </div>
   );
 }

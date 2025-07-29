@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ContentItemWithLikes, Board, Category } from '@/types';
 import { supabase, getContentItemsWithLikes } from '@/lib/supabase';
 import { getUserIdentifier } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 import BoardHeader from '@/components/BoardHeader';
 import BoardDeleteModal from '@/components/BoardDeleteModal';
 import BoardEditModal from '@/components/BoardEditModal';
@@ -33,6 +34,7 @@ import {
 export default function BoardPage() {
   const params = useParams();
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const boardId = params.boardId as string;
 
   const [contentItems, setContentItems] = useState<ContentItemWithLikes[]>([]);
@@ -108,7 +110,14 @@ export default function BoardPage() {
         .order('position', { ascending: true });
 
       if (error) throw error;
-      setCategories(data || []);
+      
+      // 기존 카테고리들에 is_hidden 필드가 없을 수 있으므로 기본값 설정
+      const categoriesWithDefaults = (data || []).map(category => ({
+        ...category,
+        is_hidden: category.is_hidden ?? false
+      }));
+      
+      setCategories(categoriesWithDefaults);
     } catch (error) {
       console.error('Error loading categories:', error);
       toast.error('카테고리를 불러오는데 실패했습니다.');
@@ -219,16 +228,30 @@ export default function BoardPage() {
   // 카테고리 수정
   const handleUpdateCategory = async (categoryId: string, updates: Partial<Category>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('categories')
         .update(updates)
-        .eq('id', categoryId);
+        .eq('id', categoryId)
+        .select()
+        .single();
 
       if (error) throw error;
+      
+      // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
+      if (data) {
+        setCategories(prev => 
+          prev.map(category => 
+            category.id === categoryId ? { ...category, ...data } : category
+          )
+        );
+      }
+      
       toast.success('카테고리가 수정되었습니다.');
     } catch (error) {
       console.error('Error updating category:', error);
       toast.error('카테고리 수정에 실패했습니다.');
+      // 오류 발생 시 카테고리 목록 다시 로드
+      loadCategories();
     }
   };
 
@@ -244,6 +267,32 @@ export default function BoardPage() {
       setEditingCategory(null);
     }
   };
+
+  // 카테고리 숨김/보이기 토글
+  const handleToggleCategoryVisibility = async (categoryId: string, isHidden: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ is_hidden: isHidden })
+        .eq('id', categoryId);
+
+      if (error) throw error;
+      
+      // 즉시 로컬 상태 업데이트
+      setCategories(prev => 
+        prev.map(category => 
+          category.id === categoryId ? { ...category, is_hidden: isHidden } : category
+        )
+      );
+      
+      toast.success(isHidden ? '카테고리가 숨겨졌습니다.' : '카테고리가 표시됩니다.');
+    } catch (error) {
+      console.error('Error toggling category visibility:', error);
+      toast.error('카테고리 숨김/보이기 설정에 실패했습니다.');
+    }
+  };
+
+
 
   // 보드 편집 저장
   const handleSaveBoardEdit = async (data: { title: string; description?: string }) => {
@@ -529,21 +578,19 @@ export default function BoardPage() {
             setCategories(prev => {
               const exists = prev.some(cat => cat.id === payload.new.id);
               if (exists) return prev;
-              const newCategory = payload.new as Category;
+              const newCategory = { ...payload.new as Category, is_hidden: (payload.new as Category).is_hidden ?? false };
               return [...prev, newCategory].sort((a, b) => a.position - b.position);
             });
           } else if (payload.eventType === 'UPDATE') {
             console.log('Category updated via realtime:', payload.new);
-            const newCategory = payload.new as Category;
+            const newCategory = { ...payload.new as Category, is_hidden: (payload.new as Category).is_hidden ?? false };
             const oldCategory = payload.old as Category;
             
-            if (newCategory.position === oldCategory.position) {
-              setCategories(prev => 
-                prev.map(category => 
-                  category.id === newCategory.id ? newCategory : category
-                ).sort((a, b) => a.position - b.position)
-              );
-            }
+            setCategories(prev => 
+              prev.map(category => 
+                category.id === newCategory.id ? newCategory : category
+              ).sort((a, b) => a.position - b.position)
+            );
           } else if (payload.eventType === 'DELETE') {
             console.log('Category deleted via realtime:', payload.old);
             setCategories(prev => prev.filter(cat => cat.id !== payload.old.id));
@@ -603,6 +650,7 @@ export default function BoardPage() {
       <BoardHeader 
         boardId={boardId}
         board={board}
+        isLoggedIn={isLoggedIn}
         onAddCategory={() => setIsCategoryManagerOpen(true)}
         onDeleteBoard={() => setIsDeleteModalOpen(true)}
         onEditBoard={() => setIsEditModalOpen(true)}
@@ -640,11 +688,13 @@ export default function BoardPage() {
           >
             <div className="overflow-x-auto">
               <SortableContext
-                items={categories.map(cat => cat.id)}
+                items={categories.filter(cat => !cat.is_hidden).map(cat => cat.id)}
                 strategy={horizontalListSortingStrategy}
               >
                 <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
-                  {categories.map((category) => (
+                  {categories
+                    .filter(category => !category.is_hidden)
+                    .map((category) => (
                     <CategoryColumn
                       key={category.id}
                       category={category}
@@ -653,10 +703,10 @@ export default function BoardPage() {
                       onAddContent={handleAddContentToCategory}
                       onEditCategory={openCategoryEditModal}
                       onDeleteCategory={handleDeleteCategory}
+                      onToggleCategoryVisibility={handleToggleCategoryVisibility}
                       onDeleteContent={handleDeleteContent}
                       onUpdateContent={handleUpdateContent}
                       onContentClick={handleContentClick}
-
                     />
                   ))}
                 </div>
@@ -675,6 +725,7 @@ export default function BoardPage() {
               onCreateCategory={handleCreateCategory}
               onUpdateCategory={handleUpdateCategory}
               onDeleteCategory={handleDeleteCategory}
+              onToggleCategoryVisibility={handleToggleCategoryVisibility}
             />
             <div className="p-6 border-t border-gray-200 flex justify-end">
               <button

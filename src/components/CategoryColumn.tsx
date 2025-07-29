@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Edit3, Trash2, Plus } from 'lucide-react';
+import { Edit3, Trash2, Plus, Eye, EyeOff } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Category, ContentItemWithLikes } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import ContentCard from './ContentCard';
 import GripIcon from './GripIcon';
 import ConfirmModal from './ConfirmModal';
@@ -16,6 +17,7 @@ interface CategoryColumnProps {
   onAddContent: (categoryId: string) => void;
   onEditCategory: (category: Category) => void;
   onDeleteCategory: (categoryId: string) => void;
+  onToggleCategoryVisibility: (categoryId: string, isHidden: boolean) => void;
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
   onUpdateContent: (itemId: string, updates: Partial<ContentItemWithLikes>) => void;
   onContentClick: (item: ContentItemWithLikes) => void;
@@ -28,10 +30,12 @@ export default function CategoryColumn({
   onAddContent,
   onEditCategory,
   onDeleteCategory,
+  onToggleCategoryVisibility,
   onDeleteContent,
   onUpdateContent,
   onContentClick,
 }: CategoryColumnProps) {
+  const { isLoggedIn } = useAuth();
   const [isExpanded, setIsExpanded] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; categoryName: string }>({
     isOpen: false,
@@ -54,6 +58,8 @@ export default function CategoryColumn({
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 1000 : 'auto',
   };
+
+
 
   // 카테고리에 속한 콘텐츠들을 최신순으로 정렬
   const sortedItems = contentItems
@@ -116,20 +122,31 @@ export default function CategoryColumn({
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
               {sortedItems.length}
             </span>
-            <button
-              onClick={() => onEditCategory(category)}
-              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-              title="카테고리 편집"
-            >
-              <Edit3 className="w-3 h-3" />
-            </button>
-            <button
-              onClick={handleDeleteCategory}
-              className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-              title="카테고리 삭제"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
+            {isLoggedIn && (
+              <>
+                <button
+                  onClick={() => onToggleCategoryVisibility(category.id, !category.is_hidden)}
+                  className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                  title={category.is_hidden ? "카테고리 보이기" : "카테고리 숨기기"}
+                >
+                  {category.is_hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                </button>
+                <button
+                  onClick={() => onEditCategory(category)}
+                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  title="카테고리 편집"
+                >
+                  <Edit3 className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={handleDeleteCategory}
+                  className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="카테고리 삭제"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

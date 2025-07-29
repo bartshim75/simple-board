@@ -14,6 +14,7 @@ export interface Category {
   description?: string;
   color: string;
   position: number;
+  is_hidden?: boolean;
   created_by_identifier: string;
   created_at: string;
   updated_at: string;

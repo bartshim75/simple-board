@@ -9,7 +9,7 @@ interface CategoryEditModalProps {
   isOpen: boolean;
   category?: Category; // undefined면 새 카테고리 생성, 있으면 편집
   onClose: () => void;
-  onSave: (data: { name: string; description?: string; color: string }) => void;
+  onSave: (data: { name: string; description?: string; color: string }) => Promise<void>;
 }
 
 const DEFAULT_COLORS = [
@@ -53,13 +53,13 @@ export default function CategoryEditModal({
     }
   }, [isOpen, category]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.error('카테고리 이름을 입력해주세요.');
       return;
     }
 
-    onSave({
+    await onSave({
       name: name.trim(),
       description: description.trim() || undefined,
       color

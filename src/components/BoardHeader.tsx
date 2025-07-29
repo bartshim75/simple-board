@@ -9,12 +9,13 @@ import toast from 'react-hot-toast';
 interface BoardHeaderProps {
   boardId: string;
   board: Board | null;
+  isLoggedIn: boolean;
   onAddCategory: () => void;
   onDeleteBoard: () => void;
   onEditBoard: () => void;
 }
 
-export default function BoardHeader({ boardId, board, onAddCategory, onDeleteBoard, onEditBoard }: BoardHeaderProps) {
+export default function BoardHeader({ boardId, board, isLoggedIn, onAddCategory, onDeleteBoard, onEditBoard }: BoardHeaderProps) {
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
 
@@ -94,31 +95,37 @@ export default function BoardHeader({ boardId, board, onAddCategory, onDeleteBoa
               )}
             </button>
 
-            <button
-              onClick={onEditBoard}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              title="보드 정보 수정"
-            >
-              <Edit3 className="w-4 h-4" />
-              <span className="hidden sm:inline">편집</span>
-            </button>
+            {isLoggedIn && (
+              <>
+                <button
+                  onClick={onEditBoard}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="보드 정보 수정"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">편집</span>
+                </button>
 
-            <button
-              onClick={onAddCategory}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">카테고리 관리</span>
-            </button>
+                <button
+                  onClick={onAddCategory}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">카테고리 관리</span>
+                </button>
 
-            <button
-              onClick={onDeleteBoard}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
-              title="보드 완전 삭제"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">보드 삭제</span>
-            </button>
+
+
+                <button
+                  onClick={onDeleteBoard}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                  title="보드 완전 삭제"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">보드 삭제</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
