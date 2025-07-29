@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, Edit3, Trash2, Folder } from 'lucide-react';
 import { Category } from '@/types';
 import CategoryEditModal from './CategoryEditModal';
+import ConfirmModal from './ConfirmModal';
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -20,6 +21,11 @@ export default function CategoryManager({
 }: CategoryManagerProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; categoryId: string; categoryName: string }>({
+    isOpen: false,
+    categoryId: '',
+    categoryName: ''
+  });
 
   const handleCreateCategory = (data: { name: string; description?: string; color: string }) => {
     onCreateCategory(data.name, data.description, data.color);
@@ -37,10 +43,21 @@ export default function CategoryManager({
     setEditingCategory(category);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    if (confirm('이 카테고리를 삭제하시겠습니까?\n카테고리 내의 모든 콘텐츠는 "분류 없음"으로 이동됩니다.')) {
-      onDeleteCategory(categoryId);
-    }
+  const handleDeleteCategory = (categoryId: string, categoryName: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      categoryId,
+      categoryName
+    });
+  };
+
+  const confirmDelete = () => {
+    onDeleteCategory(deleteConfirm.categoryId);
+    setDeleteConfirm({ isOpen: false, categoryId: '', categoryName: '' });
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ isOpen: false, categoryId: '', categoryName: '' });
   };
 
   return (
@@ -115,7 +132,7 @@ export default function CategoryManager({
                     <Edit3 className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => handleDeleteCategory(category.id)}
+                    onClick={() => handleDeleteCategory(category.id, category.name)}
                     className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="삭제"
                   >
@@ -137,6 +154,18 @@ export default function CategoryManager({
           setEditingCategory(null);
         }}
         onSave={editingCategory ? handleEditCategory : handleCreateCategory}
+      />
+
+      {/* 삭제 확인 모달 */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="카테고리 삭제"
+        message={`"${deleteConfirm.categoryName}" 카테고리를 삭제하시겠습니까?\n\n카테고리 내의 모든 콘텐츠는 "분류 없음"으로 이동됩니다.`}
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        type="danger"
       />
     </div>
   );

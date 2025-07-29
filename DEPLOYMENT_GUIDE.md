@@ -1,4 +1,4 @@
-# SimpleBoard 배포 가이드
+# 그로쓰캠프 담벼락 배포 가이드
 
 ## 🚀 Google Cloud Run 배포 완전 가이드
 
@@ -7,8 +7,8 @@
 #### 1.1 GitHub에서 새 저장소 생성
 1. [GitHub](https://github.com)에 로그인
 2. 우측 상단 `+` 버튼 → `New repository` 클릭
-3. Repository name: `simple-board` (또는 원하는 이름)
-4. Description: `SimpleBoard - A Padlet clone with real-time collaboration`
+3. Repository name: `growthcamp-wall-board` (또는 원하는 이름)
+4. Description: `그로쓰캠프 담벼락 - A Padlet clone with real-time collaboration`
 5. **Public** 또는 **Private** 선택
 6. **Initialize this repository with** 옵션들은 **체크하지 않음**
 7. `Create repository` 클릭

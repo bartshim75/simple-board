@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ContentItem, Board, Category } from '@/types';
-import { supabase } from '@/lib/supabase';
+import { ContentItemWithLikes, Board, Category } from '@/types';
+import { supabase, getContentItemsWithLikes } from '@/lib/supabase';
 import { getUserIdentifier } from '@/lib/utils';
 import BoardHeader from '@/components/BoardHeader';
 import BoardDeleteModal from '@/components/BoardDeleteModal';
@@ -35,14 +35,14 @@ export default function BoardPage() {
   const router = useRouter();
   const boardId = params.boardId as string;
 
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [contentItems, setContentItems] = useState<ContentItemWithLikes[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [board, setBoard] = useState<Board | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentItemWithLikes | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -115,17 +115,11 @@ export default function BoardPage() {
     }
   }, [boardId]);
 
-  // 컨텐츠 아이템 로드
+  // 컨텐츠 아이템 로드 (좋아요 개수 포함)
   const loadContentItems = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('content_items')
-        .select('*')
-        .eq('board_id', boardId)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      setContentItems(data || []);
+      const data = await getContentItemsWithLikes(boardId);
+      setContentItems(data);
     } catch (error) {
       console.error('Error loading content items:', error);
       toast.error('콘텐츠를 불러오는데 실패했습니다.');
@@ -133,8 +127,6 @@ export default function BoardPage() {
       setIsLoading(false);
     }
   }, [boardId]);
-
-
 
   // 컨텐츠 삭제
   const handleDeleteContent = async (itemId: string, itemUserIdentifier: string) => {
@@ -163,7 +155,7 @@ export default function BoardPage() {
   };
 
   // 컨텐츠 수정
-  const handleUpdateContent = async (itemId: string, updates: Partial<ContentItem>) => {
+  const handleUpdateContent = async (itemId: string, updates: Partial<ContentItemWithLikes>) => {
     try {
       const { data, error } = await supabase
         .from('content_items')
@@ -179,7 +171,7 @@ export default function BoardPage() {
       if (data) {
         setContentItems(prev => 
           prev.map(item => 
-            item.id === itemId ? data : item
+            item.id === itemId ? { ...item, ...data } : item
           )
         );
       }
@@ -190,10 +182,26 @@ export default function BoardPage() {
     }
   };
 
+  // 좋아요 개수 변경 처리
+  const handleLikeCountChange = (itemId: string, newCount: number) => {
+    setContentItems(prev => 
+      prev.map(item => 
+        item.id === itemId ? { ...item, like_count: newCount } : item
+      )
+    );
+    
+    // Viewer에서 열린 콘텐츠의 좋아요 개수도 업데이트
+    if (selectedContent && selectedContent.id === itemId) {
+      setSelectedContent(prev => 
+        prev ? { ...prev, like_count: newCount } : null
+      );
+    }
+  };
+
   // 카테고리 생성
   const handleCreateCategory = async (name: string, description?: string, color?: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('categories')
         .insert([{
           board_id: boardId,
@@ -202,13 +210,23 @@ export default function BoardPage() {
           color: color || '#3b82f6',
           position: categories.length,
           created_by_identifier: userIdentifier,
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+      
+      // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
+      if (data) {
+        setCategories(prev => [...prev, data]);
+      }
+      
       toast.success('카테고리가 생성되었습니다.');
     } catch (error) {
       console.error('Error creating category:', error);
       toast.error('카테고리 생성에 실패했습니다.');
+      // 오류 발생 시 카테고리 목록 다시 로드
+      loadCategories();
     }
   };
 
@@ -332,7 +350,7 @@ export default function BoardPage() {
   };
 
   // 콘텐츠 추가
-  const handleAddContent = async (item: Omit<ContentItem, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleAddContent = async (item: Omit<ContentItemWithLikes, 'id' | 'created_at' | 'updated_at' | 'like_count' | 'age_seconds'>) => {
     try {
       const newItem = {
         ...item,
@@ -351,7 +369,12 @@ export default function BoardPage() {
 
       // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
       if (data) {
-        setContentItems(prev => [data, ...prev]);
+        const newItemWithLikes: ContentItemWithLikes = {
+          ...data,
+          like_count: 0,
+          age_seconds: 0,
+        };
+        setContentItems(prev => [newItemWithLikes, ...prev]);
       }
 
       toast.success('콘텐츠가 추가되었습니다.');
@@ -370,13 +393,22 @@ export default function BoardPage() {
   };
 
   // 콘텐츠 클릭 (상세 보기)
-  const handleContentClick = (item: ContentItem) => {
+  const handleContentClick = (item: ContentItemWithLikes) => {
     setSelectedContent(item);
     setIsViewerOpen(true);
   };
 
   // 뷰어 닫기
   const handleCloseViewer = () => {
+    // Viewer가 닫힐 때 selectedContent의 최신 상태를 contentItems에 반영
+    if (selectedContent) {
+      setContentItems(prev => 
+        prev.map(item => 
+          item.id === selectedContent.id ? selectedContent : item
+        )
+      );
+    }
+    
     setIsViewerOpen(false);
     setSelectedContent(null);
   };
@@ -435,7 +467,7 @@ export default function BoardPage() {
   };
 
   // 뷰어에서 콘텐츠 업데이트
-  const handleUpdateContentFromViewer = async (updates: Partial<ContentItem>) => {
+  const handleUpdateContentFromViewer = async (updates: Partial<ContentItemWithLikes>) => {
     if (selectedContent) {
       await handleUpdateContent(selectedContent.id, updates);
       setSelectedContent(prev => prev ? { ...prev, ...updates } : null);
@@ -449,8 +481,6 @@ export default function BoardPage() {
       handleCloseViewer();
     }
   };
-
-
 
   // 실시간 구독 설정
   useEffect(() => {
@@ -489,7 +519,12 @@ export default function BoardPage() {
             setContentItems(prev => {
               const exists = prev.some(item => item.id === payload.new.id);
               if (exists) return prev; // 이미 존재하면 추가하지 않음
-              return [payload.new as ContentItem, ...prev];
+              const newItem: ContentItemWithLikes = {
+                ...payload.new as ContentItemWithLikes,
+                like_count: 0,
+                age_seconds: 0,
+              };
+              return [newItem, ...prev];
             });
           } else if (payload.eventType === 'DELETE') {
             console.log('Content item deleted via realtime:', payload.old.id);
@@ -497,7 +532,7 @@ export default function BoardPage() {
           } else if (payload.eventType === 'UPDATE') {
             setContentItems(prev => 
               prev.map(item => 
-                item.id === payload.new.id ? payload.new as ContentItem : item
+                item.id === payload.new.id ? { ...item, ...payload.new } : item
               )
             );
           }
@@ -512,25 +547,19 @@ export default function BoardPage() {
           filter: `board_id=eq.${boardId}`,
         },
         (payload) => {
-          // 드래그 중일 때는 실시간 업데이트 무시
-          if (isDragging) {
-            console.log('Ignoring realtime update during drag');
-            return;
-          }
-
           if (payload.eventType === 'INSERT') {
-            setCategories(prev => [...prev, payload.new as Category].sort((a, b) => a.position - b.position));
-          } else if (payload.eventType === 'DELETE') {
-            console.log('Category deleted via realtime:', payload.old.id);
-            setCategories(prev => prev.filter(category => category.id !== payload.old.id));
-            // 관련 콘텐츠도 함께 제거
-            setContentItems(prev => prev.filter(item => item.category_id !== payload.old.id));
+            console.log('Category inserted via realtime:', payload.new);
+            setCategories(prev => {
+              const exists = prev.some(cat => cat.id === payload.new.id);
+              if (exists) return prev;
+              const newCategory = payload.new as Category;
+              return [...prev, newCategory].sort((a, b) => a.position - b.position);
+            });
           } else if (payload.eventType === 'UPDATE') {
-            // position 업데이트는 드래그 앤 드롭에서 처리하므로 무시
+            console.log('Category updated via realtime:', payload.new);
             const newCategory = payload.new as Category;
             const oldCategory = payload.old as Category;
             
-            // position이 변경된 경우가 아니라면 업데이트
             if (newCategory.position === oldCategory.position) {
               setCategories(prev => 
                 prev.map(category => 
@@ -538,6 +567,39 @@ export default function BoardPage() {
                 ).sort((a, b) => a.position - b.position)
               );
             }
+          } else if (payload.eventType === 'DELETE') {
+            console.log('Category deleted via realtime:', payload.old);
+            setCategories(prev => prev.filter(cat => cat.id !== payload.old.id));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'likes',
+          filter: `content_item_id=in.(${contentItems.map(item => item.id).join(',')})`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            // 좋아요 추가 시 해당 콘텐츠의 좋아요 개수 증가
+            setContentItems(prev => 
+              prev.map(item => 
+                item.id === payload.new.content_item_id 
+                  ? { ...item, like_count: item.like_count + 1 }
+                  : item
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            // 좋아요 삭제 시 해당 콘텐츠의 좋아요 개수 감소
+            setContentItems(prev => 
+              prev.map(item => 
+                item.id === payload.old.content_item_id 
+                  ? { ...item, like_count: Math.max(0, item.like_count - 1) }
+                  : item
+              )
+            );
           }
         }
       )
@@ -546,7 +608,7 @@ export default function BoardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [boardId, loadBoard, loadCategories, loadContentItems]);
+  }, [boardId, loadBoard, loadCategories, loadContentItems, contentItems.map(item => item.id).join(',')]);
 
   if (isLoading) {
     return (
@@ -617,6 +679,7 @@ export default function BoardPage() {
                       onDeleteContent={handleDeleteContent}
                       onUpdateContent={handleUpdateContent}
                       onContentClick={handleContentClick}
+                      onLikeCountChange={handleLikeCountChange}
                     />
                   ))}
                 </div>
@@ -651,8 +714,6 @@ export default function BoardPage() {
         </div>
       )}
 
-
-
       {/* 카테고리 편집 모달 */}
       <CategoryEditModal
         isOpen={!!editingCategory}
@@ -669,6 +730,7 @@ export default function BoardPage() {
         onClose={handleCloseViewer}
         onUpdate={handleUpdateContentFromViewer}
         onDelete={handleDeleteContentFromViewer}
+        onLikeCountChange={handleLikeCountChange}
       />
 
       {/* 보드 편집 모달 */}

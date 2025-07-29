@@ -1,19 +1,39 @@
 'use client';
 
 import { useState } from 'react';
-import { ContentItem } from '@/types';
+import { ContentItemWithLikes } from '@/types';
 import { Trash2, ExternalLink, Clock, Type, Image as ImageIcon, Link, File, Download, User } from 'lucide-react';
 import { getRelativeTime } from '@/lib/utils';
+import LikeButton from './LikeButton';
 
 interface ContentCardProps {
-  item: ContentItem;
+  item: ContentItemWithLikes;
   isOwner: boolean;
+  userIdentifier: string;
   onDelete: () => void;
   onClick: () => void;
+  onLikeCountChange?: (newCount: number) => void;
 }
 
-export default function ContentCard({ item, isOwner, onDelete, onClick }: ContentCardProps) {
+export default function ContentCard({ 
+  item, 
+  isOwner, 
+  userIdentifier,
+  onDelete, 
+  onClick,
+  onLikeCountChange 
+}: ContentCardProps) {
   const [imageError, setImageError] = useState(false);
+
+  // 개발 모드에서만 로그 출력
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ContentCard rendering:', { 
+      itemId: item.id, 
+      userIdentifier, 
+      likeCount: item.like_count,
+      isOwner 
+    });
+  }
 
   const getTypeIcon = () => {
     switch (item.type) {
@@ -69,36 +89,44 @@ export default function ContentCard({ item, isOwner, onDelete, onClick }: Conten
     >
       {/* 헤더 */}
       <div className="p-3 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`p-1 rounded-md ${getTypeColor()}`}>
+        <div className="flex items-center justify-between min-h-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className={`p-1 rounded-md flex-shrink-0 ${getTypeColor()}`}>
               {getTypeIcon()}
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Clock className="w-3 h-3" />
-              {getRelativeTime(item.created_at)}
+            <div className="flex items-center gap-1 text-xs text-gray-500 min-w-0 flex-1">
+              <Clock className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{getRelativeTime(item.created_at)}</span>
               {item.author_name && (
                 <>
-                  <span className="text-gray-300">•</span>
-                  <User className="w-3 h-3" />
-                  <span className="text-gray-600 font-medium">{item.author_name}</span>
+                  <span className="text-gray-300 flex-shrink-0">•</span>
+                  <User className="w-3 h-3 flex-shrink-0" />
+                  <span className="text-gray-600 font-medium truncate max-w-24">{item.author_name}</span>
                 </>
               )}
             </div>
           </div>
           
-          {isOwner && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
-              title="삭제"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            <LikeButton
+              contentItemId={item.id}
+              userIdentifier={userIdentifier}
+              initialLikeCount={item.like_count}
+              onLikeCountChange={onLikeCountChange}
+            />
+            {isOwner && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                title="삭제"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

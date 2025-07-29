@@ -40,6 +40,18 @@ export interface ContentItem {
   position_y?: number;
 }
 
+export interface ContentItemWithLikes extends ContentItem {
+  like_count: number;
+  age_seconds: number;
+}
+
+export interface Like {
+  id: string;
+  content_item_id: string;
+  user_identifier: string;
+  created_at: string;
+}
+
 export interface CreateContentItem {
   board_id: string;
   category_id?: string;

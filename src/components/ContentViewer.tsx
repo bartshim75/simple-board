@@ -2,17 +2,20 @@
 
 import { useState } from 'react';
 import { X, Edit3, Download, Save, Type, Image as ImageIcon, Link, File, User, Clock } from 'lucide-react';
-import { ContentItem } from '@/types';
+import { ContentItemWithLikes } from '@/types';
 import { getRelativeTime, isValidUrl } from '@/lib/utils';
+import { getUserIdentifier } from '@/lib/utils';
+import LikeButton from './LikeButton';
 import toast from 'react-hot-toast';
 
 interface ContentViewerProps {
   isOpen: boolean;
-  content: ContentItem | null;
+  content: ContentItemWithLikes | null;
   isOwner: boolean;
   onClose: () => void;
-  onUpdate: (updatedContent: Partial<ContentItem>) => void;
+  onUpdate: (updatedContent: Partial<ContentItemWithLikes>) => void;
   onDelete: () => void;
+  onLikeCountChange?: (contentItemId: string, newCount: number) => void;
 }
 
 export default function ContentViewer({ 
@@ -21,7 +24,8 @@ export default function ContentViewer({
   isOwner, 
   onClose, 
   onUpdate, 
-  onDelete 
+  onDelete,
+  onLikeCountChange
 }: ContentViewerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -29,6 +33,7 @@ export default function ContentViewer({
   const [editAuthorName, setEditAuthorName] = useState('');
   const [editLinkUrl, setEditLinkUrl] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [userIdentifier] = useState(() => getUserIdentifier());
 
   if (!isOpen || !content) return null;
 
@@ -52,7 +57,7 @@ export default function ContentViewer({
 
   const saveChanges = async () => {
     try {
-      const updates: Partial<ContentItem> = {
+      const updates: Partial<ContentItemWithLikes> = {
         title: editTitle.trim() || undefined,
         content: editContent.trim(),
         author_name: editAuthorName.trim() || undefined,
@@ -165,6 +170,12 @@ export default function ContentViewer({
           </div>
           
           <div className="flex items-center gap-2">
+            <LikeButton
+              contentItemId={content.id}
+              userIdentifier={userIdentifier}
+              initialLikeCount={content.like_count}
+              onLikeCountChange={(newCount) => onLikeCountChange?.(content.id, newCount)}
+            />
             {isOwner && !isEditing && (
               <button
                 onClick={startEditing}

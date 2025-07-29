@@ -121,11 +121,11 @@ export default function HomePage() {
           {/* 헤더 */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-              Simple
-              <span className="text-blue-600">Board</span>
+              그로쓰캠프
+              <span className="text-blue-600"> 담벼락</span>
             </h1>
             <p className="text-xl text-gray-600 mb-1">
-              누구나 쉽게 사용하는 협업 보드
+              협업보드
             </p>
             <p className="text-gray-500">
               가입 없이 바로 시작하세요. 텍스트, 이미지, 링크를 자유롭게 공유하세요.

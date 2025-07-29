@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SimpleBoard - 심플한 협업 보드",
+  title: "그로쓰캠프 담벼락 - 협업보드",
   description: "누구나 쉽게 사용할 수 있는 온라인 협업 보드",
 };
 

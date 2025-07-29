@@ -1,27 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { ContentItem } from '@/types';
+import { ContentItemWithLikes } from '@/types';
 import ContentCard from './ContentCard';
 import ContentViewer from './ContentViewer';
 
 interface ContentGridProps {
-  contentItems: ContentItem[];
+  contentItems: ContentItemWithLikes[];
   userIdentifier: string;
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
-  onUpdateContent: (itemId: string, updates: Partial<ContentItem>) => void;
+  onUpdateContent: (itemId: string, updates: Partial<ContentItemWithLikes>) => void;
+  onLikeCountChange?: (itemId: string, newCount: number) => void;
 }
 
 export default function ContentGrid({ 
   contentItems, 
   userIdentifier, 
   onDeleteContent,
-  onUpdateContent
+  onUpdateContent,
+  onLikeCountChange
 }: ContentGridProps) {
-  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentItemWithLikes | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
-  const handleContentClick = (item: ContentItem) => {
+  const handleContentClick = (item: ContentItemWithLikes) => {
     setSelectedContent(item);
     setIsViewerOpen(true);
   };
@@ -31,7 +33,7 @@ export default function ContentGrid({
     setSelectedContent(null);
   };
 
-  const handleUpdateContent = async (updates: Partial<ContentItem>) => {
+  const handleUpdateContent = async (updates: Partial<ContentItemWithLikes>) => {
     if (selectedContent) {
       await onUpdateContent(selectedContent.id, updates);
       // 업데이트된 내용으로 선택된 콘텐츠도 업데이트
@@ -49,6 +51,11 @@ export default function ContentGrid({
       }
     }
   };
+
+  const handleLikeCountChange = (itemId: string, newCount: number) => {
+    onLikeCountChange?.(itemId, newCount);
+  };
+
   if (contentItems.length === 0) {
     return (
       <div className="text-center py-16">
@@ -78,8 +85,10 @@ export default function ContentGrid({
             key={item.id}
             item={item}
             isOwner={item.user_identifier === userIdentifier}
+            userIdentifier={userIdentifier}
             onDelete={() => onDeleteContent(item.id, item.user_identifier)}
             onClick={() => handleContentClick(item)}
+            onLikeCountChange={(newCount) => handleLikeCountChange(item.id, newCount)}
           />
         ))}
       </div>

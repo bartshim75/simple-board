@@ -4,20 +4,22 @@ import { useState } from 'react';
 import { Edit3, Trash2, Plus } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Category, ContentItem } from '@/types';
+import { Category, ContentItemWithLikes } from '@/types';
 import ContentCard from './ContentCard';
 import GripIcon from './GripIcon';
+import ConfirmModal from './ConfirmModal';
 
 interface CategoryColumnProps {
   category: Category;
-  contentItems: ContentItem[];
+  contentItems: ContentItemWithLikes[];
   userIdentifier: string;
   onAddContent: (categoryId: string) => void;
   onEditCategory: (category: Category) => void;
   onDeleteCategory: (categoryId: string) => void;
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
-  onUpdateContent: (itemId: string, updates: Partial<ContentItem>) => void;
-  onContentClick: (item: ContentItem) => void;
+  onUpdateContent: (itemId: string, updates: Partial<ContentItemWithLikes>) => void;
+  onContentClick: (item: ContentItemWithLikes) => void;
+  onLikeCountChange?: (itemId: string, newCount: number) => void;
 }
 
 export default function CategoryColumn({
@@ -30,8 +32,13 @@ export default function CategoryColumn({
   onDeleteContent,
   onUpdateContent,
   onContentClick,
+  onLikeCountChange,
 }: CategoryColumnProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; categoryName: string }>({
+    isOpen: false,
+    categoryName: ''
+  });
 
   // 드래그 앤 드롭 설정
   const {
@@ -56,15 +63,19 @@ export default function CategoryColumn({
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
   const handleDeleteCategory = () => {
-    if (sortedItems.length > 0) {
-      if (confirm(`"${category.name}" 카테고리에 ${sortedItems.length}개의 콘텐츠가 있습니다.\n카테고리를 삭제하면 모든 콘텐츠도 함께 삭제됩니다.\n정말 삭제하시겠습니까?`)) {
-        onDeleteCategory(category.id);
-      }
-    } else {
-      if (confirm(`"${category.name}" 카테고리를 삭제하시겠습니까?`)) {
-        onDeleteCategory(category.id);
-      }
-    }
+    setDeleteConfirm({
+      isOpen: true,
+      categoryName: category.name
+    });
+  };
+
+  const confirmDelete = () => {
+    onDeleteCategory(category.id);
+    setDeleteConfirm({ isOpen: false, categoryName: '' });
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ isOpen: false, categoryName: '' });
   };
 
   return (
@@ -149,13 +160,30 @@ export default function CategoryColumn({
               <ContentCard
                 item={item}
                 isOwner={item.user_identifier === userIdentifier}
+                userIdentifier={userIdentifier}
                 onDelete={() => onDeleteContent(item.id, item.user_identifier)}
                 onClick={() => onContentClick(item)}
+                onLikeCountChange={(newCount) => onLikeCountChange?.(item.id, newCount)}
               />
             </div>
           ))
         )}
       </div>
+
+      {/* 삭제 확인 모달 */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="카테고리 삭제"
+        message={sortedItems.length > 0 
+          ? `"${deleteConfirm.categoryName}" 카테고리에 ${sortedItems.length}개의 콘텐츠가 있습니다.\n\n카테고리를 삭제하면 모든 콘텐츠도 함께 삭제됩니다.\n정말 삭제하시겠습니까?`
+          : `"${deleteConfirm.categoryName}" 카테고리를 삭제하시겠습니까?`
+        }
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        type="danger"
+      />
     </div>
   );
 } 
