@@ -10,15 +10,13 @@ interface ContentGridProps {
   userIdentifier: string;
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
   onUpdateContent: (itemId: string, updates: Partial<ContentItemWithLikes>) => void;
-  onLikeCountChange?: (itemId: string, newCount: number) => void;
 }
 
 export default function ContentGrid({ 
   contentItems, 
   userIdentifier, 
   onDeleteContent,
-  onUpdateContent,
-  onLikeCountChange
+  onUpdateContent
 }: ContentGridProps) {
   const [selectedContent, setSelectedContent] = useState<ContentItemWithLikes | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
@@ -28,7 +26,7 @@ export default function ContentGrid({
     setIsViewerOpen(true);
   };
 
-  const handleCloseViewer = () => {
+  const handleCloseViewer = async () => {
     setIsViewerOpen(false);
     setSelectedContent(null);
   };
@@ -52,9 +50,7 @@ export default function ContentGrid({
     }
   };
 
-  const handleLikeCountChange = (itemId: string, newCount: number) => {
-    onLikeCountChange?.(itemId, newCount);
-  };
+
 
   if (contentItems.length === 0) {
     return (
@@ -88,7 +84,6 @@ export default function ContentGrid({
             userIdentifier={userIdentifier}
             onDelete={() => onDeleteContent(item.id, item.user_identifier)}
             onClick={() => handleContentClick(item)}
-            onLikeCountChange={(newCount) => handleLikeCountChange(item.id, newCount)}
           />
         ))}
       </div>

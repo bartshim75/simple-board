@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, memo } from 'react';
-import { likeContentItem, unlikeContentItem, checkIfLiked, testSupabaseConnection, checkTablesExist, cleanupInvalidLikes, refreshContentView, supabase } from '@/lib/supabase';
+import { useState, useEffect, memo } from 'react';
+import { likeContentItem, unlikeContentItem, checkIfLiked, supabase } from '@/lib/supabase';
 
 interface LikeButtonProps {
   contentItemId: string;
