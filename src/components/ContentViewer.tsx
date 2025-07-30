@@ -301,7 +301,6 @@ export default function ContentViewer({
                         </div>
                       )}
                                               <div className={`${imageLoading ? 'hidden' : 'block'}`} style={{ border: '2px solid red' }}>
-                          {console.log('Rendering image container, loading:', imageLoading)}
                         <img
                           src={content.image_url}
                           alt={content.title || '이미지'}
