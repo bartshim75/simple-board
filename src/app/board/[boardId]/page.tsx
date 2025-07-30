@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ContentItemWithLikes, Board, Category } from '@/types';
-import { supabase, getContentItemsWithLikes } from '@/lib/supabase';
+import { supabase, getContentItemsForBoard, getContentItemForViewer } from '@/lib/supabase';
 import { getUserIdentifier } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import BoardHeader from '@/components/BoardHeader';
@@ -124,10 +124,10 @@ export default function BoardPage() {
     }
   }, [boardId]);
 
-  // 컨텐츠 아이템 로드 (좋아요 개수 포함)
+  // 컨텐츠 아이템 로드 (경량 버전 - 이미지 제외)
   const loadContentItems = useCallback(async () => {
     try {
-      const data = await getContentItemsWithLikes(boardId);
+      const data = await getContentItemsForBoard(boardId);
       setContentItems(data);
     } catch (error) {
       console.error('Error loading content items:', error);
@@ -427,10 +427,21 @@ export default function BoardPage() {
     setIsAddModalOpen(true);
   };
 
-  // 콘텐츠 클릭 (상세 보기)
-  const handleContentClick = (item: ContentItemWithLikes) => {
-    setSelectedContent(item);
-    setIsViewerOpen(true);
+  // 콘텐츠 클릭 (상세 보기) - 뷰어에서 전체 데이터 로드
+  const handleContentClick = async (item: ContentItemWithLikes) => {
+    try {
+      // 뷰어에서 전체 데이터 로드 (이미지 포함)
+      const fullItem = await getContentItemForViewer(item.id);
+      if (fullItem) {
+        setSelectedContent(fullItem);
+        setIsViewerOpen(true);
+      } else {
+        toast.error('콘텐츠를 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Error loading full content item:', error);
+      toast.error('콘텐츠를 불러오는데 실패했습니다.');
+    }
   };
 
   // 뷰어 닫기

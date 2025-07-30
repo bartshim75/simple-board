@@ -20,7 +20,7 @@ interface CategoryColumnProps {
   onToggleCategoryVisibility: (categoryId: string, isHidden: boolean) => void;
   onDeleteContent: (itemId: string, userIdentifier: string) => void;
   onUpdateContent: (itemId: string, updates: Partial<ContentItemWithLikes>) => void;
-  onContentClick: (item: ContentItemWithLikes) => void;
+  onContentClick: (item: ContentItemWithLikes) => Promise<void>;
 }
 
 export default function CategoryColumn({
@@ -177,7 +177,7 @@ export default function CategoryColumn({
                 isOwner={item.user_identifier === userIdentifier}
                 userIdentifier={userIdentifier}
                 onDelete={() => onDeleteContent(item.id, item.user_identifier)}
-                onClick={() => onContentClick(item)}
+                onClick={async () => await onContentClick(item)}
 
               />
             </div>

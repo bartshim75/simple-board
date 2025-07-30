@@ -173,6 +173,97 @@ export const getContentItemsWithLikes = async (boardId: string): Promise<Content
     }
 }; 
 
+// 보드용 경량 콘텐츠 아이템 가져오기 (이미지 제외)
+export const getContentItemsForBoard = async (boardId: string): Promise<ContentItemWithLikes[]> => {
+  try {
+    // content_items_with_likes 뷰 사용하되 이미지 컬럼 제외
+    const { data, error } = await supabase
+      .from('content_items_with_likes')
+      .select('id, board_id, category_id, type, title, content, created_at, updated_at, created_by_identifier, like_count, age_seconds')
+      .eq('board_id', boardId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      // 뷰가 없으면 기본 content_items 사용하고 좋아요 개수를 별도로 계산
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('content_items')
+        .select('id, board_id, category_id, type, title, content, created_at, updated_at, created_by_identifier')
+        .eq('board_id', boardId)
+        .order('created_at', { ascending: false });
+
+      if (fallbackError) {
+        throw fallbackError;
+      }
+
+      // 각 콘텐츠 아이템의 좋아요 개수를 별도로 가져오기
+      const itemsWithLikes: ContentItemWithLikes[] = [];
+      
+      for (const item of fallbackData || []) {
+        const { data: likeData, error: likeError } = await supabase
+          .from('user_likes')
+          .select('id')
+          .eq('content_item_id', item.id);
+        
+        const likeCount = likeError ? 0 : (likeData?.length || 0);
+        
+        itemsWithLikes.push({
+          ...item,
+          like_count: likeCount,
+          age_seconds: Math.floor((Date.now() - new Date(item.created_at).getTime()) / 1000)
+        });
+      }
+
+      return itemsWithLikes;
+    }
+
+    return data || [];
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 뷰어용 전체 콘텐츠 아이템 가져오기 (이미지 포함)
+export const getContentItemForViewer = async (itemId: string): Promise<ContentItemWithLikes | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('content_items_with_likes')
+      .select('*')
+      .eq('id', itemId)
+      .single();
+
+    if (error) {
+      // 뷰가 없으면 기본 content_items 사용
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('content_items')
+        .select('*')
+        .eq('id', itemId)
+        .single();
+
+      if (fallbackError) {
+        throw fallbackError;
+      }
+
+      // 좋아요 개수 별도 계산
+      const { data: likeData, error: likeError } = await supabase
+        .from('user_likes')
+        .select('id')
+        .eq('content_item_id', itemId);
+      
+      const likeCount = likeError ? 0 : (likeData?.length || 0);
+      
+      return {
+        ...fallbackData,
+        like_count: likeCount,
+        age_seconds: Math.floor((Date.now() - new Date(fallbackData.created_at).getTime()) / 1000)
+      };
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // 잘못된 좋아요 데이터 정리 함수
 export const cleanupInvalidLikes = async (contentItemId: string, userIdentifier: string) => {
   try {
