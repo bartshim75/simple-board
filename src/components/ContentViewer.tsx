@@ -109,14 +109,36 @@ export default function ContentViewer({
     }
   };
 
-  const handleImageDownload = () => {
-    if (content.image_url) {
+  const handleImageDownload = async () => {
+    if (!content.image_url) return;
+
+    try {
+      toast.loading('이미지를 다운로드 중입니다...');
+      
+      const response = await fetch(content.image_url);
+      if (!response.ok) {
+        throw new Error('이미지를 가져오는 데 실패했습니다.');
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
-      link.href = content.image_url;
-      link.download = content.title || 'image';
+      link.href = blobUrl;
+      link.download = content.title || 'image.jpg';
       document.body.appendChild(link);
       link.click();
+      
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      toast.dismiss();
+      toast.success('이미지 다운로드가 시작되었습니다.');
+
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.dismiss();
+      toast.error('이미지 다운로드에 실패했습니다.');
     }
   };
 

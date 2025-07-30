@@ -144,15 +144,17 @@ function ContentCard({
 
         {item.type === 'image' && (
           <div className="space-y-2">
-            <div className="w-full h-24 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors group">
-              <div className="text-center">
-                <ImageIcon className="w-8 h-8 mx-auto mb-1 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                <p className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
-                  {item.title || '이미지'}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">클릭하여 보기</p>
+            {item.thumbnail_url ? (
+              <img 
+                src={item.thumbnail_url} 
+                alt={item.title || '이미지 썸네일'}
+                className="w-full h-32 object-cover rounded-md border border-gray-200 bg-gray-50"
+              />
+            ) : (
+              <div className="w-full h-32 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center text-gray-400">
+                <ImageIcon className="w-8 h-8" />
               </div>
-            </div>
+            )}
             {item.content && (
               <p className="text-gray-700 text-xs line-clamp-2">{item.content}</p>
             )}
@@ -187,34 +189,29 @@ function ContentCard({
 
         {item.type === 'file' && (
           <div className="space-y-2">
-                         {item.file_url && (
-               <button
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   handleFileDownload();
-                 }}
-                 className="w-full p-2 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors text-left group/file"
-               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <File className="w-6 h-6 text-gray-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 group-hover/file:text-orange-600 transition-colors truncate">
-                        {item.file_name || item.title || '파일'}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                        {item.file_size && (
-                          <span>{(item.file_size / 1024 / 1024).toFixed(2)} MB</span>
-                        )}
-                      </div>
-                    </div>
+            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-3">
+                <File className="w-6 h-6 text-gray-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {item.file_name || '파일'}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                    {item.file_size && (
+                      <span>{(item.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                    )}
+                    {item.file_type && (
+                      <>
+                        <span>•</span>
+                        <span className="truncate">{item.file_type}</span>
+                      </>
+                    )}
                   </div>
-                  <Download className="w-3 h-3 text-gray-400 group-hover/file:text-orange-600 transition-colors flex-shrink-0 ml-1" />
                 </div>
-              </button>
-            )}
+              </div>
+            </div>
             {item.content && (
-              <p className="text-gray-700 text-xs line-clamp-2">{item.content}</p>
+              <p className="text-gray-700 text-xs line-clamp-2 mt-2">{item.content}</p>
             )}
           </div>
         )}

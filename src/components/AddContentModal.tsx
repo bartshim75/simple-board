@@ -5,6 +5,8 @@ import { X, Type, Image as ImageIcon, Link, Upload, File } from 'lucide-react';
 import { ContentItem } from '@/types';
 import { isValidUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AddContentModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
   const [fileName, setFileName] = useState('');
   const [fileType, setFileType] = useState('');
   const [fileSize, setFileSize] = useState(0);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [modalCategoryId, setModalCategoryId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +44,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
     setFileName('');
     setFileType('');
     setFileSize(0);
+    setThumbnailUrl('');
     setAuthorName('');
     setModalCategoryId(selectedCategoryId || '');
     setActiveType('text');
@@ -59,75 +63,151 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
     onClose();
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // 이미지 파일 검증
     if (!file.type.startsWith('image/')) {
       toast.error('이미지 파일만 업로드할 수 있습니다.');
       return;
     }
-
-    // 파일 크기 제한 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('파일 크기는 5MB 이하여야 합니다.');
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast.error('이미지 파일 크기는 5MB를 초과할 수 없습니다.');
       return;
     }
 
     setIsFileUploading(true);
-    toast.success('이미지를 변환 중입니다...');
+    toast.loading('이미지를 업로드하고 썸네일을 생성 중입니다...');
 
-    // FileReader를 사용해서 이미지를 Base64로 변환
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setImageUrl(result);
-      if (!title) {
-        setTitle(file.name);
-      }
+    try {
+      // 1. 원본 이미지 업로드
+      const fileExtension = file.name.split('.').pop();
+      const originalFileName = `${uuidv4()}.${fileExtension}`;
+      const originalFilePath = `public/${originalFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('content-files')
+        .upload(originalFilePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: originalUrlData } = supabase.storage
+        .from('content-files')
+        .getPublicUrl(originalFilePath);
+      
+      if (!originalUrlData.publicUrl) throw new Error('원본 이미지 URL을 가져오지 못했습니다.');
+      
+      setImageUrl(originalUrlData.publicUrl);
+
+      // 2. 썸네일 생성 및 업로드 (Promise 기반으로 변경)
+      const generatedThumbnailUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onerror = () => reject(new Error('파일을 읽는 데 실패했습니다.'));
+        reader.onload = (e) => {
+          const img = document.createElement('img');
+          img.src = e.target?.result as string;
+          img.onerror = () => reject(new Error('이미지를 로드하는 데 실패했습니다.'));
+          img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300;
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return reject(new Error('캔버스 컨텍스트를 가져올 수 없습니다.'));
+            
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(async (blob) => {
+              if (!blob) return reject(new Error('썸네일 생성에 실패했습니다.'));
+              
+              const thumbnailFileName = `thumbnail-${originalFileName}`;
+              const thumbnailFilePath = `public/thumbnails/${thumbnailFileName}`;
+
+              const { error: thumbUploadError } = await supabase.storage
+                .from('content-files')
+                .upload(thumbnailFilePath, blob);
+
+              if (thumbUploadError) return reject(thumbUploadError);
+
+              const { data: thumbUrlData } = supabase.storage
+                .from('content-files')
+                .getPublicUrl(thumbnailFilePath);
+
+              if (!thumbUrlData.publicUrl) return reject(new Error('썸네일 URL을 가져오지 못했습니다.'));
+              
+              resolve(thumbUrlData.publicUrl);
+            }, 'image/jpeg', 0.8);
+          };
+        };
+      });
+
+      setThumbnailUrl(generatedThumbnailUrl);
+      if (!title) setTitle(file.name);
+      
+      toast.dismiss();
+      toast.success('이미지 및 썸네일 업로드 완료!');
+
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.dismiss();
+      toast.error(`이미지 업로드 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    } finally {
       setIsFileUploading(false);
-      toast.success('이미지 업로드가 완료되었습니다.');
-    };
-    reader.onerror = () => {
-      setIsFileUploading(false);
-      toast.error('이미지 변환에 실패했습니다.');
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // 파일 크기 제한 (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('파일 크기는 10MB 이하여야 합니다.');
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      toast.error('파일 크기는 10MB를 초과할 수 없습니다.');
       return;
     }
 
     setIsFileUploading(true);
-    toast.success('파일을 변환 중입니다...');
+    toast.loading('파일을 업로드 중입니다...');
 
-    // FileReader를 사용해서 파일을 Base64로 변환
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setFileUrl(result);
+    try {
+      const fileExtension = file.name.split('.').pop();
+      const newFileName = `${uuidv4()}.${fileExtension}`;
+      const filePath = `public/${newFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('content-files') // Supabase 스토리지 버킷 이름
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('content-files')
+        .getPublicUrl(filePath);
+
+      if (!data.publicUrl) {
+        throw new Error('파일 URL을 가져오지 못했습니다.');
+      }
+
+      setFileUrl(data.publicUrl);
       setFileName(file.name);
       setFileType(file.type);
       setFileSize(file.size);
       if (!title) {
         setTitle(file.name);
       }
+      toast.dismiss();
+      toast.success('파일 업로드 완료!');
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast.dismiss();
+      toast.error('파일 업로드에 실패했습니다.');
+    } finally {
       setIsFileUploading(false);
-      toast.success('파일 업로드가 완료되었습니다.');
-    };
-    reader.onerror = () => {
-      setIsFileUploading(false);
-      toast.error('파일 변환에 실패했습니다.');
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,7 +250,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
         content: content.trim(),
         title: title.trim() || undefined,
         author_name: authorName.trim() || undefined,
-        user_identifier: '', // 부모 컴포넌트에서 설정
+        user_identifier: '', // 부모 컴포E넌트에서 설정
       };
 
       if (activeType === 'link') {
@@ -179,6 +259,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
 
       if (activeType === 'image') {
         newItem.image_url = imageUrl;
+        newItem.thumbnail_url = thumbnailUrl;
       }
 
       if (activeType === 'file') {
