@@ -37,6 +37,11 @@ export default function ContentViewer({
   // 이미지 로딩 상태 초기화
   useEffect(() => {
     if (content?.type === 'image' && content?.image_url) {
+      console.log('ContentViewer - Image data:', {
+        type: content.type,
+        image_url: content.image_url,
+        title: content.title
+      });
       setImageLoading(true);
       setImageError(false);
     }
@@ -285,8 +290,12 @@ export default function ContentViewer({
                       <img
                         src={content.image_url}
                         alt={content.title || '이미지'}
-                        onLoad={() => setImageLoading(false)}
-                        onError={() => {
+                        onLoad={() => {
+                          console.log('Image loaded successfully');
+                          setImageLoading(false);
+                        }}
+                        onError={(e) => {
+                          console.error('Image load error:', e);
                           setImageError(true);
                           setImageLoading(false);
                         }}
