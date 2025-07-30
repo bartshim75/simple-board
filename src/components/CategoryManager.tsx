@@ -63,7 +63,7 @@ export default function CategoryManager({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-8">
+    <div className="max-w-7xl mx-auto px-8 py-8">
       <div className="flex items-center justify-between mb-10">
         <h2 className="text-3xl font-semibold text-gray-900 flex items-center gap-4">
           <Folder className="w-8 h-8" />
