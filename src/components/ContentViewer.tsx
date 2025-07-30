@@ -287,7 +287,8 @@ export default function ContentViewer({
                           </div>
                         </div>
                       )}
-                      <div className={`${imageLoading ? 'hidden' : 'block'}`}>
+                                              <div className={`${imageLoading ? 'hidden' : 'block'}`} style={{ border: '2px solid red' }}>
+                          {console.log('Rendering image container, loading:', imageLoading)}
                         <img
                           src={content.image_url}
                           alt={content.title || '이미지'}
@@ -300,8 +301,12 @@ export default function ContentViewer({
                             setImageError(true);
                             setImageLoading(false);
                           }}
-                          className="w-full max-h-96 object-contain rounded-lg border border-gray-200"
-                          style={{ minHeight: '200px' }}
+                          className="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-white"
+                          style={{ 
+                            minHeight: '200px',
+                            display: 'block',
+                            maxWidth: '100%'
+                          }}
                         />
                         <div className="absolute top-4 right-4">
                           <button
