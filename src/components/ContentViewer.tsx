@@ -44,6 +44,19 @@ export default function ContentViewer({
       });
       setImageLoading(true);
       setImageError(false);
+      
+      // 이미지가 이미 로드되어 있는지 확인
+      const img = new Image();
+      img.onload = () => {
+        console.log('Image preloaded successfully');
+        setImageLoading(false);
+      };
+      img.onerror = () => {
+        console.error('Image preload failed');
+        setImageError(true);
+        setImageLoading(false);
+      };
+      img.src = content.image_url;
     }
   }, [content]);
 
@@ -301,11 +314,11 @@ export default function ContentViewer({
                             setImageError(true);
                             setImageLoading(false);
                           }}
-                          className="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-white"
+                          className="w-full h-96 object-contain rounded-lg border border-gray-200 bg-white"
                           style={{ 
-                            minHeight: '200px',
                             display: 'block',
-                            maxWidth: '100%'
+                            maxWidth: '100%',
+                            height: '400px'
                           }}
                         />
                         <div className="absolute top-4 right-4">
