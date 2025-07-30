@@ -287,21 +287,22 @@ export default function ContentViewer({
                           </div>
                         </div>
                       )}
-                      <img
-                        src={content.image_url}
-                        alt={content.title || '이미지'}
-                        onLoad={() => {
-                          console.log('Image loaded successfully');
-                          setImageLoading(false);
-                        }}
-                        onError={(e) => {
-                          console.error('Image load error:', e);
-                          setImageError(true);
-                          setImageLoading(false);
-                        }}
-                        className={`w-full max-h-96 object-contain rounded-lg border border-gray-200 ${imageLoading ? 'hidden' : ''}`}
-                      />
-                      {!imageLoading && (
+                      <div className={`${imageLoading ? 'hidden' : 'block'}`}>
+                        <img
+                          src={content.image_url}
+                          alt={content.title || '이미지'}
+                          onLoad={() => {
+                            console.log('Image loaded successfully');
+                            setImageLoading(false);
+                          }}
+                          onError={(e) => {
+                            console.error('Image load error:', e);
+                            setImageError(true);
+                            setImageLoading(false);
+                          }}
+                          className="w-full max-h-96 object-contain rounded-lg border border-gray-200"
+                          style={{ minHeight: '200px' }}
+                        />
                         <div className="absolute top-4 right-4">
                           <button
                             onClick={handleImageDownload}
@@ -311,7 +312,7 @@ export default function ContentViewer({
                             <Download className="w-5 h-5" />
                           </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ) : (
                     <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
