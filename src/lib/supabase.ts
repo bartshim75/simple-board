@@ -179,7 +179,7 @@ export const getContentItemsForBoard = async (boardId: string): Promise<ContentI
     // content_items_with_likes 뷰 사용하되 이미지 컬럼 제외
     const { data, error } = await supabase
       .from('content_items_with_likes')
-      .select('id, board_id, category_id, type, title, content, created_at, updated_at, created_by_identifier, like_count, age_seconds')
+      .select('id, board_id, category_id, type, title, content, created_at, updated_at, user_identifier, like_count, age_seconds')
       .eq('board_id', boardId)
       .order('created_at', { ascending: false });
 
@@ -187,7 +187,7 @@ export const getContentItemsForBoard = async (boardId: string): Promise<ContentI
       // 뷰가 없으면 기본 content_items 사용하고 좋아요 개수를 별도로 계산
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('content_items')
-        .select('id, board_id, category_id, type, title, content, created_at, updated_at, created_by_identifier')
+        .select('id, board_id, category_id, type, title, content, created_at, updated_at, user_identifier')
         .eq('board_id', boardId)
         .order('created_at', { ascending: false });
 
