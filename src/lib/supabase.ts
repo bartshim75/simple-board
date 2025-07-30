@@ -225,40 +225,30 @@ export const getContentItemsForBoard = async (boardId: string): Promise<ContentI
 // 뷰어용 전체 콘텐츠 아이템 가져오기 (이미지 포함)
 export const getContentItemForViewer = async (itemId: string): Promise<ContentItemWithLikes | null> => {
   try {
+    // 기본 content_items 테이블에서 모든 컬럼 가져오기 (이미지 포함)
     const { data, error } = await supabase
-      .from('content_items_with_likes')
+      .from('content_items')
       .select('*')
       .eq('id', itemId)
       .single();
 
     if (error) {
-      // 뷰가 없으면 기본 content_items 사용
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('content_items')
-        .select('*')
-        .eq('id', itemId)
-        .single();
-
-      if (fallbackError) {
-        throw fallbackError;
-      }
-
-      // 좋아요 개수 별도 계산
-      const { data: likeData, error: likeError } = await supabase
-        .from('user_likes')
-        .select('id')
-        .eq('content_item_id', itemId);
-      
-      const likeCount = likeError ? 0 : (likeData?.length || 0);
-      
-      return {
-        ...fallbackData,
-        like_count: likeCount,
-        age_seconds: Math.floor((Date.now() - new Date(fallbackData.created_at).getTime()) / 1000)
-      };
+      throw error;
     }
 
-    return data;
+    // 좋아요 개수 별도 계산
+    const { data: likeData, error: likeError } = await supabase
+      .from('user_likes')
+      .select('id')
+      .eq('content_item_id', itemId);
+    
+    const likeCount = likeError ? 0 : (likeData?.length || 0);
+    
+    return {
+      ...data,
+      like_count: likeCount,
+      age_seconds: Math.floor((Date.now() - new Date(data.created_at).getTime()) / 1000)
+    };
   } catch (error) {
     throw error;
   }
