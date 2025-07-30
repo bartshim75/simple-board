@@ -174,7 +174,7 @@ export default function CategoryColumn({
             <div key={item.id} className="w-full">
               <ContentCard
                 item={item}
-                isOwner={item.user_identifier === userIdentifier}
+                isOwner={isLoggedIn || item.user_identifier === userIdentifier}
                 userIdentifier={userIdentifier}
                 onDelete={() => onDeleteContent(item.id, item.user_identifier)}
                 onClick={async () => await onContentClick(item)}

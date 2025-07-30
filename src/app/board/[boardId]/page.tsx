@@ -139,17 +139,23 @@ export default function BoardPage() {
 
   // 컨텐츠 삭제
   const handleDeleteContent = async (itemId: string, itemUserIdentifier: string) => {
-    if (itemUserIdentifier !== userIdentifier) {
+    if (!isLoggedIn && itemUserIdentifier !== userIdentifier) {
       toast.error('본인이 작성한 콘텐츠만 삭제할 수 있습니다.');
       return;
     }
 
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('content_items')
         .delete()
-        .eq('id', itemId)
-        .eq('user_identifier', userIdentifier);
+        .eq('id', itemId);
+
+      // 관리자가 아닐 경우에만 작성자 확인
+      if (!isLoggedIn) {
+        query = query.eq('user_identifier', userIdentifier);
+      }
+
+      const { error } = await query;
 
       if (error) throw error;
 
@@ -166,13 +172,17 @@ export default function BoardPage() {
   // 컨텐츠 수정
   const handleUpdateContent = async (itemId: string, updates: Partial<ContentItemWithLikes>) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('content_items')
         .update(updates)
-        .eq('id', itemId)
-        .eq('user_identifier', userIdentifier)
-        .select()
-        .single();
+        .eq('id', itemId);
+
+      // 관리자가 아닐 경우에만 작성자 확인
+      if (!isLoggedIn) {
+        query = query.eq('user_identifier', userIdentifier);
+      }
+      
+      const { data, error } = await query.select().single();
 
       if (error) throw error;
 
@@ -765,7 +775,7 @@ export default function BoardPage() {
       <ContentViewer
         isOpen={isViewerOpen}
         content={selectedContent}
-        isOwner={selectedContent?.user_identifier === userIdentifier}
+        isOwner={isLoggedIn || selectedContent?.user_identifier === userIdentifier}
         onClose={handleCloseViewer}
         onUpdate={handleUpdateContentFromViewer}
         onDelete={handleDeleteContentFromViewer}
