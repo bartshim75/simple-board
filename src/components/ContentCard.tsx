@@ -21,7 +21,6 @@ function ContentCard({
   onDelete, 
   onClick
 }: ContentCardProps) {
-  const [imageError, setImageError] = useState(false);
 
   // 개발 모드에서만 로그 출력 (렌더링 최적화를 위해 주석 처리)
   // if (process.env.NODE_ENV === 'development') {
@@ -145,23 +144,15 @@ function ContentCard({
 
         {item.type === 'image' && (
           <div className="space-y-2">
-            {item.image_url && !imageError ? (
-              <div className="relative">
-                <img
-                  src={item.image_url}
-                  alt={item.title || '이미지'}
-                  onError={() => setImageError(true)}
-                  className="w-full h-auto rounded-md object-cover max-h-32"
-                />
+            <div className="w-full h-24 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors group">
+              <div className="text-center">
+                <ImageIcon className="w-8 h-8 mx-auto mb-1 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                <p className="text-xs font-medium text-gray-600 group-hover:text-blue-600 transition-colors">
+                  {item.title || '이미지'}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">클릭하여 보기</p>
               </div>
-            ) : (
-              <div className="w-full h-24 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
-                <div className="text-center">
-                  <ImageIcon className="w-6 h-6 mx-auto mb-1" />
-                  <p className="text-xs">이미지를 불러올 수 없습니다</p>
-                </div>
-              </div>
-            )}
+            </div>
             {item.content && (
               <p className="text-gray-700 text-xs line-clamp-2">{item.content}</p>
             )}

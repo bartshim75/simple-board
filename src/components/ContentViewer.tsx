@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Edit3, Download, Save, Type, Image as ImageIcon, Link, File, User, Clock } from 'lucide-react';
 import { ContentItemWithLikes } from '@/types';
 import { getRelativeTime, isValidUrl } from '@/lib/utils';
@@ -31,7 +31,16 @@ export default function ContentViewer({
   const [editAuthorName, setEditAuthorName] = useState('');
   const [editLinkUrl, setEditLinkUrl] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [userIdentifier] = useState(() => getUserIdentifier());
+
+  // 이미지 로딩 상태 초기화
+  useEffect(() => {
+    if (content?.type === 'image' && content?.image_url) {
+      setImageLoading(true);
+      setImageError(false);
+    }
+  }, [content]);
 
   if (!isOpen || !content) return null;
 
@@ -265,21 +274,35 @@ export default function ContentViewer({
                 <div className="space-y-4">
                   {content.image_url && !imageError ? (
                     <div className="relative">
+                      {imageLoading && (
+                        <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                            <p className="text-gray-600">이미지를 불러오는 중...</p>
+                          </div>
+                        </div>
+                      )}
                       <img
                         src={content.image_url}
                         alt={content.title || '이미지'}
-                        onError={() => setImageError(true)}
-                        className="w-full max-h-96 object-contain rounded-lg border border-gray-200"
+                        onLoad={() => setImageLoading(false)}
+                        onError={() => {
+                          setImageError(true);
+                          setImageLoading(false);
+                        }}
+                        className={`w-full max-h-96 object-contain rounded-lg border border-gray-200 ${imageLoading ? 'hidden' : ''}`}
                       />
-                      <div className="absolute top-4 right-4">
-                        <button
-                          onClick={handleImageDownload}
-                          className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-lg transition-colors"
-                          title="이미지 다운로드"
-                        >
-                          <Download className="w-5 h-5" />
-                        </button>
-                      </div>
+                      {!imageLoading && (
+                        <div className="absolute top-4 right-4">
+                          <button
+                            onClick={handleImageDownload}
+                            className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-lg transition-colors"
+                            title="이미지 다운로드"
+                          >
+                            <Download className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
