@@ -51,6 +51,7 @@ export default function BoardPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<string>('');
   const [userIdentifier] = useState(() => getUserIdentifier());
+  const [isDragging, setIsDragging] = useState(false);
   const scrollPositionRef = useRef<{ scrollLeft: number, scrollTop: number }>({ scrollLeft: 0, scrollTop: 0 });
 
   // 드래그 앤 드롭 센서 설정
