@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ContentItemWithLikes, Board, Category } from '@/types';
 import { supabase, getContentItemsForBoard, getContentItemForViewer } from '@/lib/supabase';
@@ -51,7 +51,7 @@ export default function BoardPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<string>('');
   const [userIdentifier] = useState(() => getUserIdentifier());
-  const [isDragging, setIsDragging] = useState(false);
+  const scrollPositionRef = useRef<{ scrollLeft: number, scrollTop: number }>({ scrollLeft: 0, scrollTop: 0 });
 
   // 드래그 앤 드롭 센서 설정
   const sensors = useSensors(
@@ -439,6 +439,10 @@ export default function BoardPage() {
 
   // 콘텐츠 클릭 (상세 보기) - 뷰어에서 전체 데이터 로드
   const handleContentClick = async (item: ContentItemWithLikes) => {
+    scrollPositionRef.current = { 
+      scrollLeft: document.documentElement.scrollLeft,
+      scrollTop: document.documentElement.scrollTop
+    };
     try {
       // 뷰어에서 전체 데이터 로드 (이미지 포함)
       const fullItem = await getContentItemForViewer(item.id);
@@ -456,8 +460,39 @@ export default function BoardPage() {
 
   // 뷰어 닫기
   const handleCloseViewer = async () => {
-    // Viewer를 닫을 때 전체 화면 새로고침
-    window.location.reload();
+    const itemToRefresh = selectedContent;
+
+    setIsViewerOpen(false);
+    setSelectedContent(null);
+
+    if (itemToRefresh) {
+      try {
+        // 아이템이 삭제되지 않고 목록에 여전히 존재하는 경우에만 최신 정보로 업데이트합니다.
+        const itemExistsInState = contentItems.some(i => i.id === itemToRefresh.id);
+
+        if (itemExistsInState) {
+            const updatedItem = await getContentItemForViewer(itemToRefresh.id);
+            if (updatedItem) {
+              // 전체 목록에서 해당 아이템만 교체하여 상태를 업데이트합니다.
+              setContentItems(prevItems =>
+                prevItems.map(item =>
+                  item.id === updatedItem.id ? updatedItem : item
+                )
+              );
+            }
+        }
+      } catch (error) {
+        console.error('Error updating content item after viewer close:', error);
+        toast.error('콘텐츠 정보를 업데이트하는데 실패했습니다.');
+        // 실패 시 전체 목록을 다시 불러옵니다.
+        await loadContentItems();
+      }
+    }
+    
+    // 저장했던 스크롤 위치로 복원합니다.
+    requestAnimationFrame(() => {
+      window.scrollTo(scrollPositionRef.current.scrollLeft, scrollPositionRef.current.scrollTop);
+    });
   };
 
   // 드래그 시작 처리
@@ -535,6 +570,8 @@ export default function BoardPage() {
     loadCategories();
     loadContentItems();
 
+    const contentItemIds = contentItems.map(item => item.id).join(',');
+
     const channel = supabase
       .channel(`board_${boardId}`)
       .on(
@@ -605,8 +642,6 @@ export default function BoardPage() {
           } else if (payload.eventType === 'UPDATE') {
             console.log('Category updated via realtime:', payload.new);
             const newCategory = { ...payload.new as Category, is_hidden: (payload.new as Category).is_hidden ?? false };
-            const oldCategory = payload.old as Category;
-            
             setCategories(prev => 
               prev.map(category => 
                 category.id === newCategory.id ? newCategory : category
@@ -624,7 +659,7 @@ export default function BoardPage() {
           event: '*',
           schema: 'public',
           table: 'likes',
-          filter: `content_item_id=in.(${contentItems.map(item => item.id).join(',')})`,
+          filter: `content_item_id=in.(${contentItemIds})`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -653,7 +688,7 @@ export default function BoardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [boardId, loadBoard, loadCategories, loadContentItems, contentItems.map(item => item.id).join(',')]);
+  }, [boardId, loadBoard, loadCategories, loadContentItems, contentItems]);
 
   if (isLoading) {
     return (

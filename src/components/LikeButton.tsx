@@ -7,12 +7,14 @@ interface LikeButtonProps {
   contentItemId: string;
   userIdentifier: string;
   initialLikeCount: number;
+  onLikeChange?: (newLikeCount: number) => void;
 }
 
 function LikeButton({ 
   contentItemId, 
   userIdentifier, 
-  initialLikeCount
+  initialLikeCount,
+  onLikeChange
 }: LikeButtonProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
@@ -26,7 +28,7 @@ function LikeButton({
       try {
         const liked = await checkIfLiked(contentItemId, userIdentifier);
         setIsLiked(liked);
-      } catch (error) {
+      } catch {
         // 에러 처리 (로그 없이)
       }
     };
@@ -54,7 +56,7 @@ function LikeButton({
           }
           return prevCount;
         });
-      } catch (error) {
+      } catch {
         // 에러 처리 (로그 없이)
       }
     };
@@ -101,6 +103,7 @@ function LikeButton({
           // 낙관적 업데이트
           const newCount = likeCount + 1;
           setLikeCount(newCount);
+          if (onLikeChange) onLikeChange(newCount);
         }
       } else {
         // 좋아요 제거
@@ -110,8 +113,9 @@ function LikeButton({
         // 낙관적 업데이트
         const newCount = Math.max(0, likeCount - 1);
         setLikeCount(newCount);
+        if (onLikeChange) onLikeChange(newCount);
       }
-          } catch (error) {
+          } catch {
         // 오류 발생 시 UI만 임시로 토글 (실제 DB 연동 실패 시)
         if (!isLiked) {
           setIsLiked(true);

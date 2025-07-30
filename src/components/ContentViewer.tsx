@@ -46,7 +46,7 @@ export default function ContentViewer({
       setImageError(false);
       
       // 이미지가 이미 로드되어 있는지 확인
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         console.log('Image preloaded successfully');
         setImageLoading(false);
@@ -313,45 +313,33 @@ export default function ContentViewer({
               {content.type === 'image' && (
                 <div className="space-y-4">
                   {content.image_url && !imageError ? (
-                    <div className="relative">
+                    <div className="relative bg-gray-100 rounded-lg flex items-center justify-center min-h-[24rem]">
                       {imageLoading && (
-                        <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                             <p className="text-gray-600">이미지를 불러오는 중...</p>
                           </div>
                         </div>
                       )}
-                                              <div className={`${imageLoading ? 'hidden' : 'block'}`} style={{ border: '2px solid red' }}>
-                        <img
-                          src={content.image_url}
-                          alt={content.title || '이미지'}
-                          onLoad={() => {
-                            console.log('Image loaded successfully');
-                            setImageLoading(false);
-                          }}
-                          onError={(e) => {
-                            console.error('Image load error:', e);
-                            setImageError(true);
-                            setImageLoading(false);
-                          }}
-                          className="w-full h-96 object-contain rounded-lg border border-gray-200 bg-white"
-                          style={{ 
-                            display: 'block',
-                            maxWidth: '100%',
-                            height: '400px'
-                          }}
-                        />
+                      <img
+                        src={content.image_url}
+                        alt={content.title || '이미지'}
+                        onLoad={() => setImageLoading(false)}
+                        onError={() => setImageError(true)}
+                        className={`transition-opacity duration-300 w-full max-h-[70vh] object-contain ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                      />
+                      {!imageLoading && (
                         <div className="absolute top-4 right-4">
                           <button
                             onClick={handleImageDownload}
-                            className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-lg transition-colors"
+                            className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full transition-colors"
                             title="이미지 다운로드"
                           >
                             <Download className="w-5 h-5" />
                           </button>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">

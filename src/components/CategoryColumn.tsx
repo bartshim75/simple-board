@@ -32,11 +32,9 @@ export default function CategoryColumn({
   onDeleteCategory,
   onToggleCategoryVisibility,
   onDeleteContent,
-  onUpdateContent,
   onContentClick,
 }: CategoryColumnProps) {
   const { isLoggedIn } = useAuth();
-  const [isExpanded, setIsExpanded] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; categoryName: string }>({
     isOpen: false,
     categoryName: ''

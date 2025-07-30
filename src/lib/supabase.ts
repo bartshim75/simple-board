@@ -22,7 +22,7 @@ export const testSupabaseConnection = async () => {
   if (process.env.NODE_ENV !== 'development') return true;
   
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('content_items')
       .select('count')
       .limit(1);
@@ -45,19 +45,19 @@ export const checkTablesExist = async () => {
   // 테이블 존재 여부 확인 (로그 없이)
   try {
     await supabase.from('content_items').select('id').limit(1);
-  } catch (error) {
+  } catch {
     // 에러 처리 (로그 없이)
   }
   
   try {
     await supabase.from('user_likes').select('id').limit(1);
-  } catch (error) {
+  } catch {
     // 에러 처리 (로그 없이)
   }
   
   try {
     await supabase.from('content_items_with_likes').select('id').limit(1);
-  } catch (error) {
+  } catch {
     // 에러 처리 (로그 없이)
   }
 };
@@ -89,15 +89,12 @@ export const likeContentItem = async (contentItemId: string, userIdentifier: str
 
 export const unlikeContentItem = async (contentItemId: string, userIdentifier: string) => {
   try {
-    const { error } = await supabase
+    await supabase
       .from('user_likes')
       .delete()
       .eq('content_item_id', contentItemId)
       .eq('user_identifier', userIdentifier);
 
-    if (error) {
-      throw error;
-    }
   } catch (error) {
     throw error;
   }
@@ -257,18 +254,14 @@ export const getContentItemForViewer = async (itemId: string): Promise<ContentIt
 export const cleanupInvalidLikes = async (contentItemId: string, userIdentifier: string) => {
   try {
     // 해당 사용자의 좋아요 데이터 삭제
-    const { error } = await supabase
+    await supabase
       .from('user_likes')
       .delete()
       .eq('content_item_id', contentItemId)
       .eq('user_identifier', userIdentifier);
 
-    if (error) {
-      throw error;
-    }
-
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }; 
@@ -292,7 +285,7 @@ export const refreshContentView = async () => {
     }
     
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }; 

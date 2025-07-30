@@ -28,6 +28,7 @@ export interface ContentItem {
   content: string;
   title?: string;
   image_url?: string;
+  thumbnail_url?: string;
   link_url?: string;
   file_url?: string;
   file_name?: string;
@@ -60,6 +61,7 @@ export interface CreateContentItem {
   content: string;
   title?: string;
   image_url?: string;
+  thumbnail_url?: string;
   link_url?: string;
   file_url?: string;
   file_name?: string;
