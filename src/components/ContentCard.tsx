@@ -162,28 +162,25 @@ function ContentCard({
         {item.type === 'link' && (
           <div className="space-y-2">
             {item.link_url && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLinkClick();
-                }}
-                className="w-full p-2 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors text-left group/link"
+              <a
+                href={item.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="block w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-left group/link"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-900 group-hover/link:text-blue-600 transition-colors">
-                      {item.title || '링크'}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                    <p className="text-xs text-blue-500 underline truncate">
                       {item.link_url}
                     </p>
                   </div>
-                  <ExternalLink className="w-3 h-3 text-gray-400 group-hover/link:text-blue-600 transition-colors flex-shrink-0 ml-1" />
+                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover/link:text-blue-600 transition-colors flex-shrink-0 ml-2" />
                 </div>
-              </button>
+              </a>
             )}
             {item.content && (
-              <p className="text-gray-700 text-xs line-clamp-2">{item.content}</p>
+              <p className="text-gray-700 text-xs line-clamp-2 mt-2">{item.content}</p>
             )}
           </div>
         )}
