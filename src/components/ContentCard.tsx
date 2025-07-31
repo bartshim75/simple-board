@@ -106,6 +106,7 @@ function ContentCard({
           
           <div className="flex items-center gap-1">
             <LikeButton
+              key={`${item.id}-${item.like_count}`}
               contentItemId={item.id}
               userIdentifier={userIdentifier}
               initialLikeCount={item.like_count}

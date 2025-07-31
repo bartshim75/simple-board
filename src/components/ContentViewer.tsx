@@ -221,6 +221,10 @@ export default function ContentViewer({
               contentItemId={content.id}
               userIdentifier={userIdentifier}
               initialLikeCount={content.like_count}
+              onLikeChange={(newLikeCount) => {
+                // 부모 컴포넌트에 업데이트된 content 전달
+                onUpdate({ like_count: newLikeCount });
+              }}
             />
             {isOwner && !isEditing && (
               <button

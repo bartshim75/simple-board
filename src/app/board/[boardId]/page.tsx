@@ -552,8 +552,27 @@ export default function BoardPage() {
   // 뷰어에서 콘텐츠 업데이트
   const handleUpdateContentFromViewer = async (updates: Partial<ContentItemWithLikes>) => {
     if (selectedContent) {
-      await handleUpdateContent(selectedContent.id, updates);
-      setSelectedContent(prev => prev ? { ...prev, ...updates } : null);
+      // 좋아요 업데이트인 경우 데이터베이스 업데이트 없이 로컬 상태만 업데이트
+      if ('like_count' in updates) {
+        setSelectedContent(prev => {
+          const updated = prev ? { ...prev, ...updates } : null;
+          return updated;
+        });
+        
+        // contentItems도 업데이트
+        setContentItems(prev => 
+          prev.map(item => 
+            item.id === selectedContent.id ? { ...item, ...updates } : item
+          )
+        );
+      } else {
+        // 다른 업데이트는 데이터베이스 업데이트
+        await handleUpdateContent(selectedContent.id, updates);
+        setSelectedContent(prev => {
+          const updated = prev ? { ...prev, ...updates } : null;
+          return updated;
+        });
+      }
     }
   };
 
