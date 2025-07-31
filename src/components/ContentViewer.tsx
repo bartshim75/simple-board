@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Edit3, Download, Save, Type, Image as ImageIcon, Link, File, User, Clock } from 'lucide-react';
-import { ContentItemWithLikes } from '@/types';
+import { X, Edit3, Download, Save, Type, Image as ImageIcon, Link, File, User, Clock, Folder, Move } from 'lucide-react';
+import { ContentItemWithLikes, Category } from '@/types';
 import { getRelativeTime, isValidUrl } from '@/lib/utils';
 import { getUserIdentifier } from '@/lib/utils';
 import LikeButton from './LikeButton';
@@ -11,19 +11,27 @@ import toast from 'react-hot-toast';
 interface ContentViewerProps {
   isOpen: boolean;
   content: ContentItemWithLikes | null;
+  category: Category | null;
+  categories: Category[];
   isOwner: boolean;
+  isAdmin: boolean;
   onClose: () => Promise<void>;
   onUpdate: (updatedContent: Partial<ContentItemWithLikes>) => void;
   onDelete: () => void;
+  onMoveToCategory?: (contentId: string, newCategoryId: string) => Promise<void>;
 }
 
 export default function ContentViewer({ 
   isOpen, 
   content, 
+  category,
+  categories,
   isOwner, 
+  isAdmin,
   onClose, 
   onUpdate, 
-  onDelete
+  onDelete,
+  onMoveToCategory
 }: ContentViewerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -33,6 +41,10 @@ export default function ContentViewer({
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [userIdentifier] = useState(() => getUserIdentifier());
+  
+  // 카테고리 이동 상태
+  const [isMovingCategory, setIsMovingCategory] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
 
   // 이미지 로딩 상태 초기화
   useEffect(() => {
@@ -80,6 +92,36 @@ export default function ContentViewer({
     setEditLinkUrl('');
   };
 
+  const startMovingCategory = () => {
+    if (!content) return;
+    
+    setSelectedCategoryId(content.category_id || '');
+    setIsMovingCategory(true);
+  };
+
+  const cancelMovingCategory = () => {
+    setIsMovingCategory(false);
+    setSelectedCategoryId('');
+  };
+
+  const moveToCategory = async () => {
+    if (!content || !onMoveToCategory) return;
+    
+    if (!selectedCategoryId) {
+      toast.error('카테고리를 선택해주세요.');
+      return;
+    }
+    
+    try {
+      await onMoveToCategory(content.id, selectedCategoryId);
+      setIsMovingCategory(false);
+      toast.success('카테고리가 변경되었습니다.');
+    } catch (error) {
+      console.error('Error moving content to category:', error);
+      toast.error('카테고리 변경에 실패했습니다.');
+    }
+  };
+
   const saveChanges = async () => {
     try {
       const updates: Partial<ContentItemWithLikes> = {
@@ -100,7 +142,7 @@ export default function ContentViewer({
         updates.link_url = editLinkUrl.trim();
       }
 
-      await onUpdate(updates);
+      onUpdate(updates);
       setIsEditing(false);
       toast.success('콘텐츠가 수정되었습니다.');
     } catch (error) {
@@ -212,6 +254,18 @@ export default function ContentViewer({
                     <span className="text-gray-600 font-medium">{content.author_name}</span>
                   </>
                 )}
+                {category && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <div className="flex items-center gap-1">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className="text-gray-600 font-medium">{category.name}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -233,6 +287,15 @@ export default function ContentViewer({
                 title="수정"
               >
                 <Edit3 className="w-5 h-5" />
+              </button>
+            )}
+            {(isAdmin || isOwner) && category && (
+              <button
+                onClick={startMovingCategory}
+                className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                title="카테고리 변경"
+              >
+                <Move className="w-5 h-5" />
               </button>
             )}
             <button
@@ -301,6 +364,37 @@ export default function ContentViewer({
                   rows={8}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
                 />
+              </div>
+            </div>
+          ) : isMovingCategory ? (
+            <div className="space-y-4">
+              {/* 카테고리 이동 폼 */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Folder className="w-5 h-5" />
+                  카테고리 변경
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      새로운 카테고리 선택
+                    </label>
+                                         <select
+                       value={selectedCategoryId}
+                       onChange={(e) => setSelectedCategoryId(e.target.value)}
+                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                     >
+                       <option value="">카테고리를 선택하세요</option>
+                       {categories
+                         .filter(cat => cat.id !== category?.id) // 현재 카테고리 제외
+                         .map((cat) => (
+                           <option key={cat.id} value={cat.id}>
+                             {cat.name}
+                           </option>
+                         ))}
+                     </select>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -449,6 +543,23 @@ export default function ContentViewer({
               저장
             </button>
           </div>
+        ) : isMovingCategory ? (
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={cancelMovingCategory}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              취소
+            </button>
+            <button
+              onClick={moveToCategory}
+              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Folder className="w-4 h-4" />
+              카테고리 변경
+            </button>
+          </div>
         ) : (
           isOwner && (
             <div className="flex items-center justify-between p-6 border-t border-gray-200">
@@ -458,13 +569,24 @@ export default function ContentViewer({
               >
                 삭제
               </button>
-              <button
-                onClick={startEditing}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Edit3 className="w-4 h-4" />
-                수정
-              </button>
+                              <div className="flex items-center gap-2">
+                  {(isAdmin || isOwner) && category && (
+                    <button
+                      onClick={startMovingCategory}
+                      className="px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Move className="w-4 h-4" />
+                      카테고리 변경
+                    </button>
+                  )}
+                <button
+                  onClick={startEditing}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  수정
+                </button>
+              </div>
             </div>
           )
         )}

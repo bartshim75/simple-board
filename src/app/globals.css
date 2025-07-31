@@ -74,6 +74,11 @@ body {
   -webkit-line-clamp: 2;
 }
 
+/* Custom max-width for board layout */
+.max-w-board {
+  max-width: 1920px;
+}
+
 /* Enhanced input visibility */
 input, textarea, select {
   color: #1f2937 !important;

@@ -30,14 +30,16 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       const success = await login(email.trim(), password);
       
       if (success) {
-        toast.success('로그인되었습니다.');
+        toast.success('관리자로 로그인했습니다.');
         onClose();
         setEmail('');
         setPassword('');
       } else {
         toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
-    toast.error('로그인 중 오류가 발생했습니다.');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('로그인 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }

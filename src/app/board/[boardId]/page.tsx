@@ -584,6 +584,35 @@ export default function BoardPage() {
     }
   };
 
+  const handleMoveContentToCategory = async (contentId: string, newCategoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('content_items')
+        .update({ category_id: newCategoryId })
+        .eq('id', contentId);
+
+      if (error) throw error;
+
+      // 로컬 상태 업데이트
+      setContentItems(prev =>
+        prev.map(item =>
+          item.id === contentId ? { ...item, category_id: newCategoryId } : item
+        )
+      );
+
+      // selectedContent도 업데이트
+      if (selectedContent && selectedContent.id === contentId) {
+        setSelectedContent(prev => prev ? { ...prev, category_id: newCategoryId } : null);
+      }
+
+      toast.success('카테고리가 변경되었습니다.');
+    } catch (error) {
+      console.error('Error moving content to category:', error);
+      toast.error('카테고리 변경에 실패했습니다.');
+      throw error;
+    }
+  };
+
   // 실시간 구독 설정
   useEffect(() => {
     loadBoard();
@@ -732,7 +761,7 @@ export default function BoardPage() {
         onEditBoard={() => setIsEditModalOpen(true)}
       />
       
-      <main className="container mx-auto px-4 py-1">
+      <main className="max-w-board mx-auto px-4 py-1">
         {/* 카테고리가 없을 때 안내 메시지 */}
         {categories.length === 0 ? (
           <div className="text-center py-2" style={{ marginTop: '30px' }}>
@@ -830,11 +859,14 @@ export default function BoardPage() {
       <ContentViewer
         isOpen={isViewerOpen}
         content={selectedContent}
+        category={selectedContent ? categories.find(cat => cat.id === selectedContent.category_id) || null : null}
+        categories={categories.filter(cat => !cat.is_hidden)}
         isOwner={isLoggedIn || selectedContent?.user_identifier === userIdentifier}
+        isAdmin={isLoggedIn}
         onClose={handleCloseViewer}
         onUpdate={handleUpdateContentFromViewer}
         onDelete={handleDeleteContentFromViewer}
-
+        onMoveToCategory={handleMoveContentToCategory}
       />
 
       {/* 보드 편집 모달 */}
