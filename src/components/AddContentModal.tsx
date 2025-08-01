@@ -307,9 +307,9 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
         <form onSubmit={handleSubmit}>
           {/* 탭 */}
           <div className="px-6 pt-6">
-            <label id="content-type-label" className="block text-sm font-medium text-gray-700 mb-3">
+            <span id="content-type-label" className="block text-sm font-medium text-gray-700 mb-3">
               콘텐츠 타입 선택
-            </label>
+            </span>
             <div className="flex space-x-1 bg-gray-100 rounded-lg p-1" role="group" aria-labelledby="content-type-label">
               {tabs.map(({ type, label, icon: Icon }) => (
                 <button
@@ -424,7 +424,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                 <div className="text-center text-sm text-gray-500">또는</div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="image-url" className="block text-sm font-medium text-gray-700 mb-2">
                     이미지 URL
                   </label>
                   <input
@@ -455,7 +455,7 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="image-description" className="block text-sm font-medium text-gray-700 mb-2">
                     설명 (선택사항)
                   </label>
                   <textarea
