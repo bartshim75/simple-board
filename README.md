@@ -19,7 +19,7 @@
 
 ## 🛠️ 기술 스택
 
-- **Runtime**: Node.js 18+
+- **Runtime**: Node.js 22+
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS 4
 - **Database**: Supabase (PostgreSQL)
