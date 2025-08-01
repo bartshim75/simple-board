@@ -16,6 +16,7 @@ interface ContentViewerProps {
   isOwner: boolean;
   isAdmin: boolean;
   onClose: () => Promise<void>;
+  onCloseCallback?: () => void;
   onUpdate: (updatedContent: Partial<ContentItemWithLikes>) => void;
   onDelete: () => void;
   onMoveToCategory?: (contentId: string, newCategoryId: string) => Promise<void>;
@@ -232,7 +233,7 @@ export default function ContentViewer({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -299,7 +300,11 @@ export default function ContentViewer({
               </button>
             )}
             <button
-              onClick={async () => await onClose()}
+              onClick={async () => {
+                setIsEditing(false);
+                setIsMovingCategory(false);
+                await onClose();
+              }}
               className="p-2 text-gray-500 hover:text-gray-700 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
@@ -411,7 +416,7 @@ export default function ContentViewer({
               {content.type === 'image' && (
                 <div className="space-y-4">
                   {content.image_url && !imageError ? (
-                    <div className="relative bg-gray-100 rounded-lg flex items-center justify-center min-h-[24rem]">
+                    <div className="relative rounded-lg flex items-center justify-center min-h-[24rem]">
                       {imageLoading && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
