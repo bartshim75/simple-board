@@ -793,12 +793,12 @@ export default function BoardPage() {
           >
             <div className="overflow-x-auto">
               <SortableContext
-                items={categories.filter(cat => !cat.is_hidden).map(cat => cat.id)}
+                items={categories.filter(cat => isLoggedIn || !cat.is_hidden).map(cat => cat.id)}
                 strategy={horizontalListSortingStrategy}
               >
                 <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
                   {categories
-                    .filter(category => !category.is_hidden)
+                    .filter(category => isLoggedIn || !category.is_hidden)
                     .map((category) => (
                     <CategoryColumn
                       key={category.id}
