@@ -15,6 +15,7 @@
 - 👤 **작성자 표시** - 각 콘텐츠의 작성자 이름 표시
 - 📱 **반응형 디자인** - 모바일, 태블릿, 데스크탑 모든 기기에서 사용 가능
 - 🔗 **링크 공유** - 복사/붙여넣기로 간편하게 보드 공유
+- 🐳 **Docker 지원** - 컨테이너화된 배포 환경 제공
 
 ## 🛠️ 기술 스택
 
@@ -24,6 +25,8 @@
 - **Realtime**: Supabase Realtime
 - **Icons**: Lucide React
 - **Notifications**: React Hot Toast
+- **Container**: Docker
+- **Deployment**: Google Cloud Run
 
 ## 🚀 시작하기
 
@@ -62,6 +65,16 @@ npm run dev
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
 
+### 6. Docker로 실행 (선택사항)
+
+```bash
+# Docker 이미지 빌드
+docker build --build-arg NEXT_PUBLIC_SUPABASE_URL=your_supabase_url --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key .
+
+# 컨테이너 실행
+docker run -p 3000:3000 your-image-name
+```
+
 ## 📊 데이터베이스 스키마
 
 ### boards 테이블
@@ -84,6 +97,7 @@ npm run dev
 - `created_by_identifier`: UUID - 생성자 식별자
 - `created_at`: TIMESTAMP
 - `updated_at`: TIMESTAMP
+- `is_hidden`: BOOLEAN - 카테고리 숨김 여부
 
 ### content_items 테이블
 
@@ -104,6 +118,13 @@ npm run dev
 - `created_at`: TIMESTAMP
 - `updated_at`: TIMESTAMP
 
+### likes 테이블
+
+- `id`: UUID (Primary Key)
+- `content_item_id`: UUID - 콘텐츠 식별자 (FK)
+- `user_identifier`: UUID - 사용자 식별자
+- `created_at`: TIMESTAMP
+
 ## 🏗️ 프로젝트 구조
 
 ```
@@ -115,12 +136,20 @@ src/
 │   └── page.tsx           # 홈페이지
 ├── components/            # React 컴포넌트
 │   ├── AddContentModal.tsx    # 콘텐츠 추가 모달
-│   ├── BoardHeader.tsx        # 보드 헤더 (카테고리/콘텐츠 추가 버튼)
+│   ├── BoardDeleteModal.tsx   # 보드 삭제 모달
+│   ├── BoardEditModal.tsx     # 보드 편집 모달
+│   ├── BoardHeader.tsx        # 보드 헤더
 │   ├── CategoryColumn.tsx     # 카테고리별 세로 컬럼
+│   ├── CategoryEditModal.tsx  # 카테고리 편집 모달
 │   ├── CategoryManager.tsx    # 카테고리 관리 모달
+│   ├── ConfirmModal.tsx       # 확인 모달
 │   ├── ContentCard.tsx        # 콘텐츠 카드
-│   ├── ContentGrid.tsx        # 콘텐츠 그리드 (레거시)
-│   └── ContentViewer.tsx      # 콘텐츠 상세 뷰어
+│   ├── ContentViewer.tsx      # 콘텐츠 상세 뷰어
+│   ├── GripIcon.tsx           # 드래그 핸들 아이콘
+│   ├── LikeButton.tsx         # 좋아요 버튼
+│   └── LoginModal.tsx         # 로그인 모달
+├── contexts/              # React Context
+│   └── AuthContext.tsx    # 인증 컨텍스트
 ├── lib/                   # 유틸리티 및 설정
 │   ├── supabase.ts       # Supabase 클라이언트
 │   └── utils.ts          # 헬퍼 함수들
@@ -136,6 +165,8 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 - 새 콘텐츠 추가 (INSERT)
 - 콘텐츠 삭제 (DELETE)
 - 콘텐츠 수정 (UPDATE)
+- 카테고리 변경 (INSERT/UPDATE/DELETE)
+- 좋아요 기능 (INSERT/DELETE)
 
 ### 사용자 식별
 
@@ -156,7 +187,8 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 - 보드 내에서 카테고리 생성 및 관리
 - 10가지 사전 정의된 색상 중 선택
 - 카테고리별 콘텐츠 필터링
-- 드래그앤드롭으로 콘텐츠 카테고리 이동 (향후 기능)
+- 드래그앤드롭으로 카테고리 순서 변경
+- 카테고리 숨김/표시 기능
 
 ### 콘텐츠 뷰어
 
@@ -165,8 +197,53 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 - 파일 정보 표시 및 다운로드
 - 인라인 편집 기능
 - 작성자 정보 및 시간 표시
+- 카테고리 간 콘텐츠 이동 기능
+
+### 좋아요 시스템
+
+- 콘텐츠별 좋아요 기능
+- 사용자별 좋아요 상태 추적
+- 실시간 좋아요 수 업데이트
 
 ## 🚀 배포
+
+### Docker 배포
+
+```bash
+# 환경 변수와 함께 빌드
+docker build \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=your_supabase_url \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key \
+  -t wall-board .
+
+# 컨테이너 실행
+docker run -p 3000:3000 wall-board
+```
+
+### Google Cloud Run으로 프로덕션 배포
+
+이 프로젝트는 Google Cloud Run에 자동 배포되도록 설정되어 있습니다.
+
+#### 📖 상세 배포 가이드
+전체 배포 과정은 [`DEPLOYMENT_GUIDE.md`](./DEPLOYMENT_GUIDE.md)를 참조하세요.
+
+#### ⚡ 빠른 배포
+1. GitHub 저장소 생성 및 소스 푸시
+2. Google Cloud 프로젝트 설정
+3. GitHub Secrets 설정
+4. `main` 브랜치에 푸시하면 자동 배포
+
+#### 🔧 배포 구성
+- **Docker**: 멀티 스테이지 빌드로 최적화
+- **GitHub Actions**: 자동 CI/CD 파이프라인
+- **Cloud Run**: 서버리스 컨테이너 플랫폼
+- **Artifact Registry**: Docker 이미지 저장소
+
+#### 🌐 배포된 환경 특징
+- HTTPS 자동 적용
+- 자동 스케일링 (0→N)
+- Cold Start 최적화
+- 실시간 로그 및 모니터링
 
 ### Vercel 배포
 
@@ -175,7 +252,7 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 3. 환경 변수 설정
 4. 배포 완료
 
-### 환경 변수 (Vercel)
+### 환경 변수 (배포 시)
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -235,6 +312,8 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 2. **다운로드**: 이미지/파일은 상세 뷰어에서 다운로드 가능
 3. **수정**: 본인 작성 콘텐츠는 상세 뷰어에서 수정 가능
 4. **삭제**: 본인 작성 콘텐츠만 삭제 가능
+5. **좋아요**: 콘텐츠에 좋아요 표시 가능
+6. **카테고리 이동**: 콘텐츠를 다른 카테고리로 이동 가능
 
 ### 보드 공유하기
 
@@ -242,32 +321,25 @@ Supabase Realtime을 사용하여 다음 이벤트를 실시간으로 동기화:
 2. 자동으로 클립보드에 링크 복사
 3. 링크를 다른 사람들과 공유
 
-## 🚀 배포
+## 🔄 최근 업데이트
 
-### Google Cloud Run으로 프로덕션 배포
+### v1.2.0 (최신)
+- 🐛 **빌드 오류 수정**: 사용되지 않는 ContentGrid 컴포넌트 제거로 TypeScript 컴파일 오류 해결
+- 🐳 **Docker 지원 강화**: 멀티 스테이지 빌드로 최적화된 Docker 이미지
+- 📊 **데이터베이스 스키마 개선**: 카테고리 숨김 기능 추가 (`is_hidden` 컬럼)
+- ❤️ **좋아요 시스템**: 콘텐츠별 좋아요 기능 구현
+- 🎨 **UI/UX 개선**: 카테고리 관리 및 콘텐츠 뷰어 인터페이스 개선
 
-이 프로젝트는 Google Cloud Run에 자동 배포되도록 설정되어 있습니다.
+### v1.1.0
+- 📂 **카테고리 시스템**: 카테고리 기반 콘텐츠 관리
+- 🎯 **컬럼 레이아웃**: 카테고리별 세로 컬럼 구조
+- 🔄 **실시간 동기화**: Supabase Realtime으로 실시간 업데이트
+- 📱 **반응형 디자인**: 모든 기기에서 최적화된 사용자 경험
 
-#### 📖 상세 배포 가이드
-전체 배포 과정은 [`DEPLOYMENT_GUIDE.md`](./DEPLOYMENT_GUIDE.md)를 참조하세요.
-
-#### ⚡ 빠른 배포
-1. GitHub 저장소 생성 및 소스 푸시
-2. Google Cloud 프로젝트 설정
-3. GitHub Secrets 설정
-4. `main` 브랜치에 푸시하면 자동 배포
-
-#### 🔧 배포 구성
-- **Docker**: 멀티 스테이지 빌드로 최적화
-- **GitHub Actions**: 자동 CI/CD 파이프라인
-- **Cloud Run**: 서버리스 컨테이너 플랫폼
-- **Artifact Registry**: Docker 이미지 저장소
-
-#### 🌐 배포된 환경 특징
-- HTTPS 자동 적용
-- 자동 스케일링 (0→N)
-- Cold Start 최적화
-- 실시간 로그 및 모니터링
+### v1.0.0
+- 🚀 **초기 릴리즈**: 기본 협업 보드 기능
+- 📝 **다양한 콘텐츠 지원**: 텍스트, 이미지, 링크, 파일
+- 👤 **사용자 식별**: 로컬 스토리지 기반 사용자 관리
 
 ## 🤝 기여하기
 
