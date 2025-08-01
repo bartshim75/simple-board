@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, Type, Image as ImageIcon, Link, Upload, File } from 'lucide-react';
+import Image from 'next/image';
 import { ContentItem } from '@/types';
 import { isValidUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -425,10 +426,12 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       미리보기
                     </label>
-                    <img
+                    <Image
                       src={imageUrl}
                       alt="미리보기"
-                      className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                      width={500}
+                      height={192}
+                      className="object-cover rounded-lg border border-gray-200"
                       onError={() => toast.error('이미지를 불러올 수 없습니다.')}
                     />
                   </div>

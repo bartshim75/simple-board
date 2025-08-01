@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Plus, ExternalLink, Clipboard, History, LogIn, LogOut, User } from 'lucide-react';
 import { generateBoardId, getUserIdentifier } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -32,7 +33,7 @@ export default function HomePage() {
         .limit(10);
 
       if (error) throw error;
-      setRecentBoards(data || []);
+      setRecentBoards((data as unknown as Board[]) || []);
     } catch (error) {
       console.error('Error loading recent boards:', error);
     }
@@ -123,11 +124,11 @@ export default function HomePage() {
       {/* 헤더 */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-0">
             <div className="w-10 h-10 flex items-center justify-center">
-              <img src="/gcamp_logo.svg" alt="GrowthCamp Logo" className="w-8 h-8" />
+              <Image src="/gcamp_logo.svg" alt="GrowthCamp Logo" width={32} height={32} />
             </div>
-            <img src="/gcamp_name_logo_gray.svg" alt="GrowthCamp Name Logo" className="h-8" />
+            <Image src="/gcamp_name_logo_gray.svg" alt="GrowthCamp Name Logo" width={200} height={48} className="h-12" priority />
           </div>
           
           <div className="flex items-center gap-3">

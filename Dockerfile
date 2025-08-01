@@ -1,9 +1,6 @@
 # 멀티 스테이지 빌드를 사용하여 이미지 크기 최적화
 FROM node:22-alpine AS base
 
-# pnpm 설치
-RUN npm install -g pnpm
-
 # 의존성 설치 스테이지
 FROM base AS deps
 WORKDIR /app

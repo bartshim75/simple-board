@@ -124,10 +124,14 @@ export default function CategoryColumn({
               <>
                 <button
                   onClick={() => onToggleCategoryVisibility(category.id, !category.is_hidden)}
-                  className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                  className={`p-1 rounded transition-colors ${
+                    category.is_hidden 
+                      ? "text-red-500 hover:text-red-600 hover:bg-red-50" 
+                      : "text-gray-400 hover:text-orange-600 hover:bg-orange-50"
+                  }`}
                   title={category.is_hidden ? "카테고리 보이기" : "카테고리 숨기기"}
                 >
-                  {category.is_hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {category.is_hidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                 </button>
                 <button
                   onClick={() => onEditCategory(category)}

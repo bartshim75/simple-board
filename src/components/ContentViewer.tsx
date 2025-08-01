@@ -7,6 +7,7 @@ import { getRelativeTime, isValidUrl } from '@/lib/utils';
 import { getUserIdentifier } from '@/lib/utils';
 import LikeButton from './LikeButton';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 interface ContentViewerProps {
   isOpen: boolean;
@@ -416,7 +417,7 @@ export default function ContentViewer({
               {content.type === 'image' && (
                 <div className="space-y-4">
                   {content.image_url && !imageError ? (
-                    <div className="relative rounded-lg flex items-center justify-center min-h-[24rem]">
+                    <div className="relative w-full h-[60vh] rounded-lg flex items-center justify-center">
                       {imageLoading && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
@@ -425,12 +426,14 @@ export default function ContentViewer({
                           </div>
                         </div>
                       )}
-                      <img
+                      <Image
                         src={content.image_url}
                         alt={content.title || '이미지'}
+                        fill
+                        style={{ objectFit: 'contain' }}
                         onLoad={() => setImageLoading(false)}
                         onError={() => setImageError(true)}
-                        className={`transition-opacity duration-300 w-full max-h-[70vh] object-contain ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                        className={`transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                       />
                       {!imageLoading && (
                         <div className="absolute top-4 right-4">

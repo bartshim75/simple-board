@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { memo } from 'react';
 import { ContentItemWithLikes } from '@/types';
-import { Trash2, ExternalLink, Clock, Type, Image as ImageIcon, Link, File, Download, User } from 'lucide-react';
+import { Trash2, ExternalLink, Clock, Type, Image as ImageIcon, Link, File, User } from 'lucide-react';
 import { getRelativeTime } from '@/lib/utils';
 import LikeButton from './LikeButton';
+import Image from 'next/image';
 
 interface ContentCardProps {
   item: ContentItemWithLikes;
@@ -62,13 +63,9 @@ function ContentCard({
     }
   };
 
-  const handleLinkClick = () => {
-    if (item.type === 'link' && item.link_url) {
-      window.open(item.link_url, '_blank', 'noopener,noreferrer');
-    }
-  };
+  
 
-  const handleFileDownload = () => {
+  const handleFileDownload = () => { // eslint-disable-line @typescript-eslint/no-unused-vars
     if (item.type === 'file' && item.file_url && item.file_name) {
       const link = document.createElement('a');
       link.href = item.file_url;
@@ -146,10 +143,13 @@ function ContentCard({
         {item.type === 'image' && (
           <div className="space-y-2">
             {item.thumbnail_url ? (
-              <img 
+              <Image 
                 src={item.thumbnail_url} 
                 alt={item.title || '이미지 썸네일'}
-                className="w-full h-32 object-cover rounded-md border border-gray-200 bg-gray-50"
+                width={400}
+                height={128}
+                className="object-cover rounded-md border border-gray-200 bg-gray-50"
+                priority
               />
             ) : (
               <div className="w-full h-32 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center text-gray-400">

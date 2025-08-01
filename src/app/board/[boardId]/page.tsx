@@ -51,7 +51,7 @@ export default function BoardPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<string>('');
   const [userIdentifier] = useState(() => getUserIdentifier());
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const scrollPositionRef = useRef<{ scrollLeft: number, scrollTop: number }>({ scrollLeft: 0, scrollTop: 0 });
 
   // 드래그 앤 드롭 센서 설정
@@ -88,12 +88,12 @@ export default function BoardPage() {
             .single();
 
           if (reloadError) throw reloadError;
-          setBoard(newData);
+          setBoard(newData as unknown as Board);
         } else {
           throw error;
         }
       } else {
-        setBoard(data);
+        setBoard(data as unknown as Board);
       }
     } catch (error) {
       console.error('Error loading board:', error);
@@ -118,7 +118,7 @@ export default function BoardPage() {
         is_hidden: category.is_hidden ?? false
       }));
       
-      setCategories(categoriesWithDefaults);
+      setCategories(categoriesWithDefaults as Category[]);
     } catch (error) {
       console.error('Error loading categories:', error);
       toast.error('카테고리를 불러오는데 실패했습니다.');
@@ -224,7 +224,7 @@ export default function BoardPage() {
       
       // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
       if (data) {
-        setCategories(prev => [...prev, data]);
+        setCategories(prev => [...prev, data as unknown as Category]);
       }
       
       toast.success('카테고리가 생성되었습니다.');
@@ -416,7 +416,7 @@ export default function BoardPage() {
       // 즉시 로컬 상태 업데이트 (낙관적 업데이트)
       if (data) {
         const newItemWithLikes: ContentItemWithLikes = {
-          ...data,
+          ...(data as unknown as ContentItemWithLikes),
           like_count: 0,
           age_seconds: 0,
         };
