@@ -32,7 +32,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <footer className="text-center text-gray-500 text-sm border-t border-gray-200 bg-gray-50" style={{ padding: '19px 0' }}>
-            © AX Leading by GrowthCamp. All rights reserved.
+            © Better AX begins with GrowthCamp. All rights reserved.
           </footer>
         </AuthProvider>
         <Toaster
