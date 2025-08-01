@@ -761,7 +761,7 @@ export default function BoardPage() {
         onEditBoard={() => setIsEditModalOpen(true)}
       />
       
-      <main className="max-w-board mx-auto px-4 py-1">
+      <main className="container mx-auto px-4 py-1">
         {/* 카테고리가 없을 때 안내 메시지 */}
         {categories.length === 0 ? (
           <div className="text-center py-2" style={{ marginTop: '30px' }}>
