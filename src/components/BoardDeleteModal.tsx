@@ -109,7 +109,7 @@ export default function BoardDeleteModal({
 
           {/* 확인 입력 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <label htmlFor="delete-confirm" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               삭제를 확인하려면 보드 ID를 정확히 입력하세요:
             </label>
             <div className="space-y-2">
@@ -118,6 +118,8 @@ export default function BoardDeleteModal({
               </div>
               <input
                 type="text"
+                id="delete-confirm"
+                name="delete-confirm"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="위의 보드 ID를 여기에 입력하세요"

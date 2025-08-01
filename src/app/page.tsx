@@ -204,11 +204,13 @@ export default function HomePage() {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="board-title" className="block text-sm font-medium text-gray-700 mb-2">
                       보드 제목 *
                     </label>
                     <input
                       type="text"
+                      id="board-title"
+                      name="board-title"
                       value={boardTitle}
                       onChange={(e) => setBoardTitle(e.target.value)}
                       placeholder="보드 제목을 입력하세요"
@@ -217,10 +219,12 @@ export default function HomePage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="board-description" className="block text-sm font-medium text-gray-700 mb-2">
                       설명 (선택사항)
                     </label>
                     <textarea
+                      id="board-description"
+                      name="board-description"
                       value={boardDescription}
                       onChange={(e) => setBoardDescription(e.target.value)}
                       placeholder="보드에 대한 간단한 설명을 입력하세요"
@@ -282,6 +286,8 @@ export default function HomePage() {
                 <div className="flex gap-2">
                   <input
                     type="text"
+                    id="board-url"
+                    name="board-url"
                     value={boardUrl}
                     onChange={(e) => setBoardUrl(e.target.value)}
                     placeholder="보드 URL 또는 ID를 입력하세요"

@@ -307,17 +307,24 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
         <form onSubmit={handleSubmit}>
           {/* 탭 */}
           <div className="px-6 pt-6">
-            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            <label id="content-type-label" className="block text-sm font-medium text-gray-700 mb-3">
+              콘텐츠 타입 선택
+            </label>
+            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1" role="group" aria-labelledby="content-type-label">
               {tabs.map(({ type, label, icon: Icon }) => (
                 <button
                   key={type}
                   type="button"
+                  id={`tab-${type}`}
+                  name={`tab-${type}`}
                   onClick={() => setActiveType(type)}
                   className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                     activeType === type
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
+                  aria-pressed={activeType === type}
+                  aria-label={`${label} 타입 선택`}
                 >
                   <Icon className="w-4 h-4" />
                   {label}
@@ -330,11 +337,13 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
           <div className="p-6 space-y-4">
             {/* 제목 (공통) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="content-title" className="block text-sm font-medium text-gray-700 mb-2">
                 제목 (선택사항)
               </label>
               <input
                 type="text"
+                id="content-title"
+                name="content-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="제목을 입력하세요"
@@ -344,11 +353,13 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
 
             {/* 작성자 이름 (공통) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="author-name" className="block text-sm font-medium text-gray-700 mb-2">
                 작성자 이름 (선택사항)
               </label>
               <input
                 type="text"
+                id="author-name"
+                name="author-name"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder="작성자 이름을 입력하세요"
@@ -361,10 +372,12 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
             {/* 텍스트 타입 */}
             {activeType === 'text' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="content-text" className="block text-sm font-medium text-gray-700 mb-2">
                   내용 *
                 </label>
                 <textarea
+                  id="content-text"
+                  name="content-text"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="내용을 입력하세요"
@@ -379,12 +392,14 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
             {activeType === 'image' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="image-upload" className="block text-sm font-medium text-gray-700 mb-2">
                     이미지 업로드
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     <input
                       type="file"
+                      id="image-upload"
+                      name="image-upload"
                       ref={fileInputRef}
                       onChange={handleImageUpload}
                       accept="image/*"
@@ -414,6 +429,8 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                   </label>
                   <input
                     type="url"
+                    id="image-url"
+                    name="image-url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://example.com/image.jpg"
@@ -442,6 +459,8 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                     설명 (선택사항)
                   </label>
                   <textarea
+                    id="image-description"
+                    name="image-description"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="이미지에 대한 설명을 입력하세요"
@@ -456,11 +475,13 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
             {activeType === 'link' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="link-url" className="block text-sm font-medium text-gray-700 mb-2">
                     링크 URL *
                   </label>
                   <input
                     type="url"
+                    id="link-url"
+                    name="link-url"
                     value={linkUrl}
                     onChange={(e) => setLinkUrl(e.target.value)}
                     placeholder="https://example.com"
@@ -470,10 +491,12 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="link-description" className="block text-sm font-medium text-gray-700 mb-2">
                     설명 (선택사항)
                   </label>
                   <textarea
+                    id="link-description"
+                    name="link-description"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="링크에 대한 설명을 입력하세요"
@@ -488,12 +511,14 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
             {activeType === 'file' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
                     파일 업로드 *
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     <input
                       type="file"
+                      id="file-upload"
+                      name="file-upload"
                       ref={documentInputRef}
                       onChange={handleFileUpload}
                       className="hidden"
@@ -533,10 +558,12 @@ export default function AddContentModal({ isOpen, selectedCategoryId, onClose, o
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="file-description" className="block text-sm font-medium text-gray-700 mb-2">
                     설명 (선택사항)
                   </label>
                   <textarea
+                    id="file-description"
+                    name="file-description"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="파일에 대한 설명을 입력하세요"

@@ -75,27 +75,31 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         <form onSubmit={handleLogin} className="p-6 space-y-6">
           {/* 이메일 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
               이메일 <span className="text-red-500">*</span>
             </label>
-                                    <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="이메일을 입력하세요"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                          autoFocus
-                        />
+            <input
+              type="email"
+              id="login-email"
+              name="login-email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="이메일을 입력하세요"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+              autoFocus
+            />
           </div>
 
           {/* 비밀번호 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-2">
               비밀번호 <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
+                id="login-password"
+                name="login-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="비밀번호를 입력하세요"

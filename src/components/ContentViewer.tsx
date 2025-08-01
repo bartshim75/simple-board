@@ -319,11 +319,13 @@ export default function ContentViewer({
             <div className="space-y-4">
               {/* 편집 폼 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 mb-2">
                   제목
                 </label>
                 <input
                   type="text"
+                  id="edit-title"
+                  name="edit-title"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   placeholder="제목을 입력하세요"
@@ -332,11 +334,13 @@ export default function ContentViewer({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="edit-author" className="block text-sm font-medium text-gray-700 mb-2">
                   작성자 이름
                 </label>
                 <input
                   type="text"
+                  id="edit-author"
+                  name="edit-author"
                   value={editAuthorName}
                   onChange={(e) => setEditAuthorName(e.target.value)}
                   placeholder="작성자 이름을 입력하세요"
@@ -346,11 +350,13 @@ export default function ContentViewer({
 
               {content.type === 'link' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="edit-link-url" className="block text-sm font-medium text-gray-700 mb-2">
                     링크 URL
                   </label>
                   <input
                     type="url"
+                    id="edit-link-url"
+                    name="edit-link-url"
                     value={editLinkUrl}
                     onChange={(e) => setEditLinkUrl(e.target.value)}
                     placeholder="https://example.com"
@@ -360,10 +366,12 @@ export default function ContentViewer({
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="edit-content" className="block text-sm font-medium text-gray-700 mb-2">
                   {content.type === 'text' ? '내용' : '설명'}
                 </label>
                 <textarea
+                  id="edit-content"
+                  name="edit-content"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   placeholder={content.type === 'text' ? '내용을 입력하세요' : '설명을 입력하세요'}
@@ -382,14 +390,16 @@ export default function ContentViewer({
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="category-select" className="block text-sm font-medium text-gray-700 mb-2">
                       새로운 카테고리 선택
                     </label>
-                                         <select
-                       value={selectedCategoryId}
-                       onChange={(e) => setSelectedCategoryId(e.target.value)}
-                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                     >
+                    <select
+                      id="category-select"
+                      name="category-select"
+                      value={selectedCategoryId}
+                      onChange={(e) => setSelectedCategoryId(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    >
                        <option value="">카테고리를 선택하세요</option>
                        {categories
                          .filter(cat => cat.id !== category?.id) // 현재 카테고리 제외

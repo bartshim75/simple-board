@@ -107,11 +107,13 @@ export default function CategoryEditModal({
         <div className="p-6 space-y-6">
           {/* 카테고리 이름 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-2">
               카테고리 이름 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
+              id="category-name"
+              name="category-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="예: 아이디어, 할 일, 완료됨"
@@ -122,10 +124,12 @@ export default function CategoryEditModal({
 
           {/* 설명 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="category-description" className="block text-sm font-medium text-gray-700 mb-2">
               설명 (선택사항)
             </label>
             <textarea
+              id="category-description"
+              name="category-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="이 카테고리에 대한 간단한 설명을 입력하세요"
@@ -136,13 +140,15 @@ export default function CategoryEditModal({
 
           {/* 색상 선택 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label htmlFor="color-option-0" className="block text-sm font-medium text-gray-700 mb-3">
               색상 선택
             </label>
-            <div className="grid grid-cols-5 gap-3">
-              {DEFAULT_COLORS.map((colorOption) => (
+            <div className="grid grid-cols-5 gap-3" role="group" aria-labelledby="color-option-0">
+              {DEFAULT_COLORS.map((colorOption, index) => (
                 <button
                   key={colorOption}
+                  id={`color-option-${index}`}
+                  name={`color-option-${colorOption}`}
                   onClick={() => setColor(colorOption)}
                   className={`w-12 h-12 rounded-full border-2 transition-all hover:scale-110 ${
                     color === colorOption 
@@ -151,6 +157,7 @@ export default function CategoryEditModal({
                   }`}
                   style={{ backgroundColor: colorOption }}
                   title={`색상: ${colorOption}`}
+                  aria-pressed={color === colorOption}
                 />
               ))}
             </div>
